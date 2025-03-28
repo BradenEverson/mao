@@ -62,3 +62,25 @@ pub trait Tokenizable {
     /// Creates a token stream with respect to `self`, lifetime should match self's lifetime
     fn tokenize(&self) -> Vec<Token<'_>>;
 }
+
+impl<STR> Tokenizable for STR
+where
+    STR: AsRef<str>,
+{
+    fn tokenize(&self) -> Vec<Token<'_>> {
+        todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Tokenizable;
+
+    #[test]
+    fn basic_tokenizer_test() {
+        let mut tokens = r#"var i = 0;
+var foo = 10;
+print("this is a little test")"#
+            .tokenize();
+    }
+}
