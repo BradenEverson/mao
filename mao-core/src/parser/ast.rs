@@ -2,12 +2,14 @@
 
 use std::{error::Error, fmt::Display};
 
-use crate::tokenizer::{Token, TokenTag, keyword::Keyword};
+use crate::tokenizer::{TokenTag, keyword::Keyword};
 
 use super::Parser;
 
 /// A node in the abstract syntax tree, represents all possible operations that can occur
 pub enum Expr<'src> {
+    /// An assignment from an identifier to an expression
+    Assignment(&'src str, Box<Expr<'src>>),
     /// A binary operation between two expressions
     Binary {
         /// The operator
@@ -54,6 +56,18 @@ pub enum BinaryOp {
     Add,
     /// Subtract two expressions
     Sub,
+    /// Equality
+    Eq,
+    /// Inequality
+    Neq,
+    /// Greater than
+    Gt,
+    /// Greater than or equal to
+    Gte,
+    /// Less than
+    Lt,
+    /// Less than or equal to
+    Lte,
 }
 
 /// An error that occurs whilst parsing
@@ -92,17 +106,80 @@ impl<'src> Parser<'src> {
         }
     }
 
-    /// an expression is equality  | var ident = equality | ident = equality | ident++ | ident += equality
+    /// an expression is equality  | var ident = equality
     fn expression(&mut self) -> Result<Expr<'src>, ParseError> {
-        todo!()
+        match self.peek() {
+            TokenTag::Keyword(Keyword::VariableDeclaration) => {
+                self.advance();
+                if let TokenTag::Identifier(name) = self.advance() {
+                    self.consume(&TokenTag::Keyword(Keyword::Equal))?;
+                    let assignment = self.equality()?;
+
+                    Ok(Expr::Assignment(name, Box::new(assignment)))
+                } else {
+                    Err(ParseError)
+                }
+            }
+
+            _ => self.equality(),
+        }
     }
 
+    /// An equality is comparison ( (!= | ==) comparison)*
     fn equality(&mut self) -> Result<Expr<'src>, ParseError> {
-        todo!()
+        let mut expr = self.comparison()?;
+
+        while matches!(
+            self.peek(),
+            TokenTag::Keyword(Keyword::EqualEqual) | TokenTag::Keyword(Keyword::BangEqual)
+        ) {
+            let op = match self.advance() {
+                TokenTag::Keyword(Keyword::EqualEqual) => BinaryOp::Eq,
+                TokenTag::Keyword(Keyword::BangEqual) => BinaryOp::Neq,
+                _ => unreachable!(),
+            };
+
+            let right = Box::new(self.comparison()?);
+
+            expr = Expr::Binary {
+                op,
+                left: Box::new(expr),
+                right,
+            }
+        }
+
+        Ok(expr)
     }
 
+    /// A comparison is term ( ( ">" | ">=" | "<" | "<=" ) term )*
     fn comparison(&mut self) -> Result<Expr<'src>, ParseError> {
-        todo!()
+        let mut expr = self.term()?;
+
+        while matches!(
+            self.peek(),
+            TokenTag::Keyword(Keyword::Greater)
+                | TokenTag::Keyword(Keyword::GreaterEqual)
+                | TokenTag::Keyword(Keyword::Less)
+                | TokenTag::Keyword(Keyword::LessEqual)
+        ) {
+            let op = match self.advance() {
+                TokenTag::Keyword(Keyword::Greater) => BinaryOp::Gt,
+                TokenTag::Keyword(Keyword::GreaterEqual) => BinaryOp::Gte,
+                TokenTag::Keyword(Keyword::Less) => BinaryOp::Lt,
+                TokenTag::Keyword(Keyword::LessEqual) => BinaryOp::Lte,
+                _ => unreachable!(),
+            };
+
+            let right = Box::new(self.term()?);
+
+            expr = Expr::Binary {
+                op,
+                left: Box::new(expr),
+                right,
+            }
+        }
+
+        Ok(expr)
     }
 
     fn term(&mut self) -> Result<Expr<'src>, ParseError> {
