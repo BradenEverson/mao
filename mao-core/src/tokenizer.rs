@@ -1,6 +1,6 @@
 //! Core tokenizer for the language, defines all `variants` a token may have
 
-use std::fmt::Display;
+use std::{error::Error, fmt::Display};
 
 use keyword::{Keyword, KeywordRandomizer};
 use rand::RngCore;
@@ -62,15 +62,39 @@ pub enum TokenTag<'src> {
     EOF,
 }
 
-/// An error during tokenizing
-#[derive(Debug, Clone, Copy)]
-pub struct TokenizeError;
+/// An error during tokenization
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TokenizeError {
+    /// The invalid message
+    message: String,
+    /// The line that is invalid
+    pub line: usize,
+    /// The column in that line that's invalid
+    pub col: usize,
+}
+
+impl TokenizeError {
+    /// Creates a new token error with context
+    pub fn new(msg: impl Into<String>, line: usize, col: usize) -> Self {
+        Self {
+            message: msg.into(),
+            line,
+            col,
+        }
+    }
+}
 
 impl Display for TokenizeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Token Error :(")
+        write!(
+            f,
+            "{} at line {}, col {}",
+            self.message, self.line, self.col
+        )
     }
 }
+
+impl Error for TokenizeError {}
 
 /// An result type for tokenizing
 pub type Result<T> = std::result::Result<T, TokenizeError>;
@@ -213,8 +237,11 @@ where
                         if ended {
                             TokenTag::String(&self.as_ref()[idx + 1..=idx2])
                         } else {
-                            return Err(TokenizeError);
-                            // return Err(TokenError::new('"', line, col));
+                            return Err(TokenizeError::new(
+                                r#"Expected End of String: `"`"#,
+                                line,
+                                col,
+                            ));
                         }
                     }
 
@@ -234,12 +261,22 @@ where
 
                         let word = &self.as_ref()[idx..=end];
                         if let Err(Some(was)) = keyword_gen.try_from_str(word) {
-                            return Err(TokenizeError);
+                            return Err(TokenizeError::new(
+                                format!("Invalid keyword {word}, did you mean {was}?"),
+                                line,
+                                col,
+                            ));
                         } else {
                             TokenTag::Identifier(word)
                         }
                     }
-                    _ => return Err(TokenizeError),
+                    bad => {
+                        return Err(TokenizeError::new(
+                            format!("Invalid token {bad}"),
+                            line,
+                            col,
+                        ));
+                    }
                 }
             };
 
