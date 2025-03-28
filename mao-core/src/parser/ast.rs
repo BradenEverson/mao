@@ -7,6 +7,7 @@ use crate::tokenizer::{TokenTag, keyword::Keyword};
 use super::Parser;
 
 /// A node in the abstract syntax tree, represents all possible operations that can occur
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expr<'src> {
     /// Print an expression's literal result
     Print(Box<Expr<'src>>),
@@ -37,6 +38,7 @@ pub enum Expr<'src> {
 }
 
 /// A literal type
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Literal<'src> {
     /// String
     String(&'src str),
@@ -49,6 +51,7 @@ pub enum Literal<'src> {
 }
 
 /// All operations that can occur between two targets
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum UnaryOp {
     /// Number negation
     Neg,
@@ -57,6 +60,7 @@ pub enum UnaryOp {
 }
 
 /// All operations that can occur between two targets
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum BinaryOp {
     /// Add two expressions
     Add,
@@ -287,5 +291,34 @@ impl<'src> Parser<'src> {
         };
 
         Ok(prim)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rand::SeedableRng;
+    use rand_chacha::ChaCha8Rng;
+
+    use crate::{
+        parser::{
+            Parser,
+            ast::{Expr, Literal},
+        },
+        tokenizer::Tokenizable,
+    };
+
+    #[test]
+    fn basic_tokenizer_test() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let stream = "$ i = 0 .".tokenize(&mut rng).expect("Valid tokenization");
+        let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
+
+        let ast = parser.parse().expect("Parse to AST");
+
+        assert_eq!(ast.len(), 1);
+        assert_eq!(
+            ast[0],
+            Expr::Assignment("i", Box::new(Expr::Literal(Literal::Number(0.0))))
+        )
     }
 }
