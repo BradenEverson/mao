@@ -4,6 +4,8 @@ use rand::{RngCore, seq::IndexedRandom};
 
 use crate::tokenizer::{Token, TokenTag};
 
+pub mod ast;
+
 /// All valid statement ends
 pub const VALID_ENDS: &[TokenTag<'static>] = &[
     TokenTag::Semicolon,
@@ -22,6 +24,14 @@ pub struct Parser<'tok> {
     idx: usize,
     /// Dynamic parser rules
     rules: ParserRules,
+}
+
+/// Dynamic parsing rules that affect how the AST is generated
+pub struct ParserRules {
+    /// What should a statement end with? (;, ., !, something crazy :O)
+    pub statements_end_with: TokenTag<'static>,
+    /// Should parenthesis exist in if statements, loops and function calls?
+    pub parenthesis: bool,
 }
 
 impl<'tok> Parser<'tok> {
@@ -50,12 +60,9 @@ impl<'tok> Parser<'tok> {
 
         self
     }
-}
 
-/// Dynamic parsing rules that affect how the AST is generated
-pub struct ParserRules {
-    /// What should a statement end with? (;, ., !, something crazy :O)
-    pub statements_end_with: TokenTag<'static>,
-    /// Should parenthesis exist in if statements, loops and function calls?
-    pub parenthesis: bool,
+    /// Peeks at the current token
+    pub fn peek(&self) -> TokenTag<'tok> {
+        self.tokens[self.idx.min(self.tokens.len() - 1)].tag
+    }
 }
