@@ -76,7 +76,7 @@ const OPEN_BRACE_VARIANTS: &[&str] = &["{", ":"];
 const CLOSE_BRACE_VARIANTS: &[&str] = &["}", "end"];
 
 /// All valid `and` variants
-const AND_VARIANTS: &[&str] = &["and", "&&", r#"/\"#];
+const AND_VARIANTS: &[&str] = &["and", "&&", r#"/\"#, "alongside"];
 /// All valid `or` variants
 const OR_VARIANTS: &[&str] = &["or", "||", r#"\/"#];
 
