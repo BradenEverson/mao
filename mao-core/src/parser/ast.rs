@@ -294,6 +294,34 @@ impl<'src> Parser<'src> {
     }
 }
 
+/** GOOD TO KNOW
+ * These are the mappings for when the seed is 42:
+ *
+ * Lexer:
+ *
+ *     "NULL": EmptyValue
+ *     "true": True
+ *     "then": ConditionalElse
+ *     "case": ConditionalCheck
+ *     "$": VariableDeclaration
+ *     "not": Bang
+ *     "and": And
+ *     "\\/": Or
+ *     "inequal": BangEqual
+ *     "<": Less
+ *     "{": OpenBrace
+ *     "}": CloseBrace
+ *     "fmt.Println": Print
+ *     "each": ForLoopInit
+ *     ">": Greater
+ *     "gte": GreaterEqual
+ *     "👎": False
+ *     "=": Equal
+ *     "equals": EqualEqual
+ *     "lte": LessEqual
+ *     "during": WhileLoopInit
+ */
+
 #[cfg(test)]
 mod tests {
     use rand::SeedableRng;
@@ -308,17 +336,16 @@ mod tests {
     };
 
     #[test]
-    fn basic_tokenizer_test() {
+    fn variable_assignment() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let stream = "$ i = 0 .".tokenize(&mut rng).expect("Valid tokenization");
         let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
 
-        let ast = parser.parse().expect("Parse to AST");
+        let ast = &parser.parse().expect("Parse to AST")[0];
 
-        assert_eq!(ast.len(), 1);
         assert_eq!(
-            ast[0],
-            Expr::Assignment("i", Box::new(Expr::Literal(Literal::Number(0.0))))
+            ast,
+            &Expr::Assignment("i", Box::new(Expr::Literal(Literal::Number(0.0))))
         )
     }
 }
