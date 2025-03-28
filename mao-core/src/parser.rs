@@ -8,7 +8,7 @@ pub struct Parser<'tok> {
     /// Index into the token stream
     idx: usize,
     /// Dynamic parser rules
-    rules: ParserRules,
+    rules: ParserRules<'tok>,
 }
 
 /// Dynamic parsing rules that affect how the AST is generated
