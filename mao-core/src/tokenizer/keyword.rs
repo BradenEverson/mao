@@ -65,8 +65,8 @@ const LESSEQUAL_VARIANTS: &[&str] = &["<=", "lte"];
 const OPEN_BRACE_VARIANTS: &[&str] = &["{", ":"];
 const CLOSE_BRACE_VARIANTS: &[&str] = &["}", "end"];
 
-const AND_VARIANTS: &[&str] = &["and", "&&", "/\\"];
-const OR_VARIANTS: &[&str] = &["or", "||", "\\/"];
+const AND_VARIANTS: &[&str] = &["and", "&&", r#"/\"#];
+const OR_VARIANTS: &[&str] = &["or", "||", r#"\/"#];
 
 const FALSE_VARIANTS: &[&str] = &["false", "False", "FALSE", "incorrect", "nah", "👎"];
 const TRUE_VARIANTS: &[&str] = &["true", "True", "TRUE", "correct", "yah", "👍"];
