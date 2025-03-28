@@ -8,6 +8,8 @@ use super::Parser;
 
 /// A node in the abstract syntax tree, represents all possible operations that can occur
 pub enum Expr<'src> {
+    /// Print an expression's literal result
+    Print(Box<Expr<'src>>),
     /// A variable reference
     Variable(&'src str),
     /// An assignment from an identifier to an expression
@@ -105,7 +107,11 @@ impl<'src> Parser<'src> {
     /// Parse a singular statement
     pub fn statement(&mut self) -> Result<Expr<'src>, ParseError> {
         match self.peek() {
-            TokenTag::Keyword(Keyword::Print) => todo!("printing"),
+            TokenTag::Keyword(Keyword::Print) => {
+                let next = self.expression()?;
+                self.consume_end()?;
+                Ok(Expr::Print(Box::new(next)))
+            }
             _ => {
                 let res = self.expression()?;
                 self.consume_end()?;
