@@ -143,7 +143,6 @@ impl KeywordRandomizer {
 
         while idx <= idx2 {
             let pot_kwrd = &stream[idx..=idx2];
-            println!("{pot_kwrd}");
             if let Ok(keyword) = self.try_from_str(pot_kwrd) {
                 *len = idx2 - idx + 1;
                 return Some(keyword);

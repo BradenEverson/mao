@@ -8,6 +8,7 @@ use rand::RngCore;
 pub mod keyword;
 
 /// A token with respect to it's location in the token stream
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Token<'src> {
     /// The tag
     pub tag: TokenTag<'src>,
@@ -20,6 +21,7 @@ pub struct Token<'src> {
 }
 
 /// All tags for a token
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TokenTag<'src> {
     /// An identifier
     Identifier(&'src str),
@@ -103,11 +105,140 @@ where
             let mut len = 1;
             col += 1;
 
-            // TODO: First check if it's a keyword
             let tag = if let Some(kwrd) = keyword_gen.try_parse(&stream, idx, &mut len) {
+                for _ in 0..len - 1 {
+                    peek.next();
+                }
+
                 TokenTag::Keyword(kwrd)
             } else {
                 match ch {
+                    '[' => TokenTag::OpenBracket,
+                    ']' => TokenTag::CloseBracket,
+
+                    '(' => TokenTag::OpenParen,
+                    ')' => TokenTag::CloseParen,
+
+                    ';' => TokenTag::Semicolon,
+                    '.' => TokenTag::Dot,
+
+                    '+' => match peek.peek() {
+                        Some((_, '+')) => {
+                            peek.next();
+                            TokenTag::PlusPlus
+                        }
+                        Some((_, '=')) => {
+                            peek.next();
+                            TokenTag::PlusEq
+                        }
+                        _ => TokenTag::Plus,
+                    },
+                    '-' => TokenTag::Minus,
+                    '*' => TokenTag::Star,
+                    '/' => match peek.peek() {
+                        Some((_, '/')) => {
+                            for (_, ch) in peek.by_ref() {
+                                if ch == '\n' {
+                                    break;
+                                }
+                            }
+                            continue;
+                        }
+                        Some((_, '*')) => {
+                            peek.next();
+                            while let Some((_, ch)) = peek.next() {
+                                if ch == '*' {
+                                    if let Some((_, '/')) = peek.peek() {
+                                        peek.next();
+                                        break;
+                                    }
+                                }
+                            }
+
+                            continue;
+                        }
+                        _ => TokenTag::Slash,
+                    },
+
+                    '\n' => {
+                        col = 0;
+                        line += 1;
+                        continue;
+                    }
+
+                    ',' => TokenTag::Comma,
+
+                    ws if ws.is_whitespace() => continue,
+
+                    num if num.is_numeric() => {
+                        let mut curr = String::new();
+                        curr.push(num);
+
+                        let mut dot = false;
+                        while let Some((_, next)) = peek.peek() {
+                            if next.is_numeric() {
+                                col += 1;
+                                len += 1;
+                                curr.push(peek.next().unwrap().1);
+                            } else if *next == '.' && !dot {
+                                col += 1;
+                                len += 1;
+                                curr.push(peek.next().unwrap().1);
+                                dot = true;
+                            } else {
+                                break;
+                            }
+                        }
+
+                        // Unwrap safety, as we build the number we are ensuring that only numeric
+                        // characters are added to it, this cannot fail
+                        TokenTag::Number(curr.parse().unwrap())
+                    }
+
+                    '"' => {
+                        let mut idx2 = idx;
+                        let mut ended = false;
+
+                        for (_, c) in peek.by_ref() {
+                            if c != '"' {
+                                idx2 += 1;
+                                col += 1;
+                                len += 1;
+                            } else {
+                                ended = true;
+                                break;
+                            }
+                        }
+
+                        if ended {
+                            TokenTag::String(&self.as_ref()[idx + 1..=idx2])
+                        } else {
+                            return Err(TokenizeError);
+                            // return Err(TokenError::new('"', line, col));
+                        }
+                    }
+
+                    ch if ch.is_alphanumeric() || ch == '_' => {
+                        let mut end = idx;
+
+                        while let Some((idx2, next)) = peek.peek() {
+                            if !(next.is_alphanumeric() || *next == '_') {
+                                break;
+                            }
+
+                            end = *idx2;
+                            col += 1;
+                            len += 1;
+                            peek.next();
+                        }
+
+                        let word = &self.as_ref()[idx..=end];
+                        if let Err(Some(was)) = keyword_gen.try_from_str(word) {
+                            return Err(TokenizeError);
+                        } else {
+                            TokenTag::Identifier(word)
+                        }
+                    }
                     _ => return Err(TokenizeError),
                 }
             };
@@ -135,13 +266,46 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::Tokenizable;
+    use rand::SeedableRng;
+    use rand_chacha::ChaCha8Rng;
+
+    use crate::tokenizer::keyword::Keyword;
+
+    use super::{Token, TokenTag, Tokenizable};
+
+    fn toks<'a>(tokens: Vec<Token<'a>>) -> Vec<TokenTag<'a>> {
+        tokens.into_iter().map(|token| token.tag).collect()
+    }
 
     #[test]
     fn basic_tokenizer_test() {
-        let stream = r#"var i = 0;
-var foo = 10;
-print("this is a little test")"#
-            .tokenze_no_rng();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let stream = r#"$ i = 0;
+$ foo = 10;
+fmt.Println("this is a little test");"#
+            .tokenize(&mut rng)
+            .expect("Valid tokenization");
+
+        let toks = toks(stream);
+        let expected = [
+            TokenTag::Keyword(Keyword::VariableDeclaration),
+            TokenTag::Identifier("i"),
+            TokenTag::Keyword(Keyword::Equal),
+            TokenTag::Number(0.0),
+            TokenTag::Semicolon,
+            TokenTag::Keyword(Keyword::VariableDeclaration),
+            TokenTag::Identifier("foo"),
+            TokenTag::Keyword(Keyword::Equal),
+            TokenTag::Number(10.0),
+            TokenTag::Semicolon,
+            TokenTag::Keyword(Keyword::Print),
+            TokenTag::OpenParen,
+            TokenTag::String("this is a little test"),
+            TokenTag::CloseParen,
+            TokenTag::Semicolon,
+            TokenTag::EOF,
+        ];
+
+        assert_eq!(toks, expected)
     }
 }
