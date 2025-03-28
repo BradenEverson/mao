@@ -53,29 +53,48 @@ pub enum Keyword {
     LessEqual,
 }
 
+/// All valid assignment variants
 const EQUAL_VARIANTS: &[&str] = &["=", "equals", "is"];
+/// All valid > variants
 const GREATER_VARIANTS: &[&str] = &[">", "gt", "greater"];
+/// All valid >= variants
 const GREATEREQUAL_VARIANTS: &[&str] = &[">=", "gte"];
+/// All valid `==` variants
 const EQUALEQUAL_VARIANTS: &[&str] = &["==", "equals"];
+/// All valid `!=` variants
 const BANGEQUAL_VARIANTS: &[&str] = &["!=", "inequal"];
+/// All valid `!` variants
 const BANG_VARIANTS: &[&str] = &["!", "not"];
+/// All valid `<` variants
 const LESS_VARIANTS: &[&str] = &["<", "lt", "less"];
+/// All valid `<=` variants
 const LESSEQUAL_VARIANTS: &[&str] = &["<=", "lte"];
 
+/// All valid `{` variants
 const OPEN_BRACE_VARIANTS: &[&str] = &["{", ":"];
+/// All valid `}` variants
 const CLOSE_BRACE_VARIANTS: &[&str] = &["}", "end"];
 
+/// All valid `and` variants
 const AND_VARIANTS: &[&str] = &["and", "&&", r#"/\"#];
+/// All valid `or` variants
 const OR_VARIANTS: &[&str] = &["or", "||", r#"\/"#];
 
+/// All valid `false` variants
 const FALSE_VARIANTS: &[&str] = &["false", "False", "FALSE", "incorrect", "nah", "👎"];
+/// All valid `true` variants
 const TRUE_VARIANTS: &[&str] = &["true", "True", "TRUE", "correct", "yah", "👍"];
 
+/// All valid `for` variants
 const FOR_VARIANTS: &[&str] = &["for", "each"];
+/// All valid `if` variants
 const IF_VARIANTS: &[&str] = &["if", "case", "check", "cond"];
+/// All valid `else` variants
 const ELSE_VARIANTS: &[&str] = &["else", "then", "otherwise"];
+/// All valid `nil` variants
 const EMPTY_VARIANTS: &[&str] = &["nil", "None", "null", "NULL", "undefined", "void"];
 
+/// All valid printing variants
 const PRINT_VARIANTS: &[&str] = &[
     "print",
     "puts",
@@ -89,8 +108,10 @@ const PRINT_VARIANTS: &[&str] = &[
     "say",
 ];
 
+/// All valid `while` variants
 const WHILE_VARIANTS: &[&str] = &["while", "during", "whilst", "until", "as_long_as", "🔁"];
 
+/// All valid `var` variants
 const VARIABLE_DECLARATION_VARIANTS: &[&str] = &["var", "let", "auto", "$", "val", "new"];
 
 impl Keyword {
