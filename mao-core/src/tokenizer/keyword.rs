@@ -132,6 +132,33 @@ pub struct KeywordRandomizer {
 }
 
 impl KeywordRandomizer {
+    /// Tries to parse a keyword from a stream
+    pub fn try_parse(&self, stream: &str, idx: usize, len: &mut usize) -> Option<Keyword> {
+        let characters: Vec<_> = stream.chars().collect();
+        let mut idx2 = idx;
+
+        while !characters[idx2].is_whitespace() && idx2 < characters.len() - 1 {
+            idx2 += 1
+        }
+
+        while idx <= idx2 {
+            let pot_kwrd = &stream[idx..=idx2];
+            println!("{pot_kwrd}");
+            if let Ok(keyword) = self.try_from_str(pot_kwrd) {
+                *len = idx2 - idx + 1;
+                return Some(keyword);
+            }
+
+            if idx2 == 0 {
+                break;
+            }
+
+            idx2 -= 1;
+        }
+
+        None
+    }
+
     /// Seeds all keywords
     pub fn seeded_start<RNG: RngCore>(rng: &mut RNG) -> Self {
         let mut ctx = HashMap::new();
@@ -174,6 +201,8 @@ mod tests {
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
 
+    use crate::tokenizer::keyword::Keyword;
+
     use super::KeywordRandomizer;
 
     #[test]
@@ -184,5 +213,29 @@ mod tests {
         let attempt = keywords.try_from_str("var");
 
         assert_eq!(attempt.unwrap_err(), Some("$"))
+    }
+
+    #[test]
+    fn try_parse_bottom_up() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let mut keywords = KeywordRandomizer::seeded_start(&mut rng);
+        let mut len = 0;
+        keywords.ctx.insert(">=", Keyword::GreaterEqual);
+
+        let attempt = keywords.try_parse(">=", 0, &mut len);
+        assert_eq!(attempt.unwrap(), Keyword::GreaterEqual);
+        assert_eq!(len, 2);
+
+        let attempt = keywords.try_parse(" >=", 1, &mut len);
+        assert_eq!(attempt.unwrap(), Keyword::GreaterEqual);
+        assert_eq!(len, 2);
+
+        let attempt = keywords.try_parse(" > =", 1, &mut len);
+        assert_eq!(attempt.unwrap(), Keyword::Greater);
+        assert_eq!(len, 1);
+
+        let attempt = keywords.try_parse(" > =", 3, &mut len);
+        assert_eq!(attempt.unwrap(), Keyword::Equal);
+        assert_eq!(len, 1);
     }
 }

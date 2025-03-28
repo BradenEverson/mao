@@ -1,5 +1,7 @@
 //! Core tokenizer for the language, defines all `variants` a token may have
 
+use std::fmt::Display;
+
 use keyword::{Keyword, KeywordRandomizer};
 use rand::RngCore;
 
@@ -58,13 +60,26 @@ pub enum TokenTag<'src> {
     EOF,
 }
 
+/// An error during tokenizing
+#[derive(Debug, Clone, Copy)]
+pub struct TokenizeError;
+
+impl Display for TokenizeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Token Error :(")
+    }
+}
+
+/// An result type for tokenizing
+pub type Result<T> = std::result::Result<T, TokenizeError>;
+
 /// Any object that can be transformed into a token stream
 pub trait Tokenizable {
     /// Creates a token stream with respect to `self`, lifetime should match self's lifetime
-    fn tokenize<RNG: RngCore>(&self, rng: &mut RNG) -> Vec<Token<'_>>;
+    fn tokenize<RNG: RngCore>(&self, rng: &mut RNG) -> Result<Vec<Token<'_>>>;
     /// Creates a token stream with respect to `self`, lifetime should match self's lifetime with
     /// no rng
-    fn tokenze_no_rng(&self) -> Vec<Token<'_>> {
+    fn tokenze_no_rng(&self) -> Result<Vec<Token<'_>>> {
         let mut rng = rand::rng();
 
         self.tokenize(&mut rng)
@@ -75,10 +90,46 @@ impl<STR> Tokenizable for STR
 where
     STR: AsRef<str>,
 {
-    fn tokenize<RNG: RngCore>(&self, rng: &mut RNG) -> Vec<Token<'_>> {
+    fn tokenize<RNG: RngCore>(&self, rng: &mut RNG) -> Result<Vec<Token<'_>>> {
         let keyword_gen = KeywordRandomizer::seeded_start(rng);
+        let mut peek = self.as_ref().chars().enumerate().peekable();
+        let stream = &self.as_ref();
+        let mut tokens = vec![];
 
-        panic!("{keyword_gen:?}")
+        let mut line = 1;
+        let mut col = 0;
+
+        while let Some((idx, ch)) = peek.next() {
+            let mut len = 1;
+            col += 1;
+
+            // TODO: First check if it's a keyword
+            let tag = if let Some(kwrd) = keyword_gen.try_parse(&stream, idx, &mut len) {
+                TokenTag::Keyword(kwrd)
+            } else {
+                match ch {
+                    _ => return Err(TokenizeError),
+                }
+            };
+
+            let next = Token {
+                tag,
+                col,
+                len,
+                line,
+            };
+
+            tokens.push(next);
+        }
+
+        tokens.push(Token {
+            line,
+            col,
+            len: 0,
+            tag: TokenTag::EOF,
+        });
+
+        Ok(tokens)
     }
 }
 
@@ -88,7 +139,7 @@ mod tests {
 
     #[test]
     fn basic_tokenizer_test() {
-        let mut stream = r#"var i = 0;
+        let stream = r#"var i = 0;
 var foo = 10;
 print("this is a little test")"#
             .tokenze_no_rng();
