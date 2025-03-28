@@ -1,5 +1,5 @@
 [workspace]
-members =  []
+members =  ["mao-core"]
 resolver = "2"
 
 [workspace.package]
