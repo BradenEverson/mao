@@ -92,7 +92,32 @@ impl<'src> Parser<'src> {
         }
     }
 
+    /// an expression is equality  | var ident = equality | ident = equality | ident++ | ident += equality
     fn expression(&mut self) -> Result<Expr<'src>, ParseError> {
+        todo!()
+    }
+
+    fn equality(&mut self) -> Result<Expr<'src>, ParseError> {
+        todo!()
+    }
+
+    fn comparison(&mut self) -> Result<Expr<'src>, ParseError> {
+        todo!()
+    }
+
+    fn term(&mut self) -> Result<Expr<'src>, ParseError> {
+        todo!()
+    }
+
+    fn factor(&mut self) -> Result<Expr<'src>, ParseError> {
+        todo!()
+    }
+
+    fn unary(&mut self) -> Result<Expr<'src>, ParseError> {
+        todo!()
+    }
+
+    fn primary(&mut self) -> Result<Expr<'src>, ParseError> {
         todo!()
     }
 }
