@@ -8,6 +8,8 @@ use super::Parser;
 
 /// A node in the abstract syntax tree, represents all possible operations that can occur
 pub enum Expr<'src> {
+    /// A variable reference
+    Variable(&'src str),
     /// An assignment from an identifier to an expression
     Assignment(&'src str, Box<Expr<'src>>),
     /// A binary operation between two expressions
@@ -37,9 +39,11 @@ pub enum Literal<'src> {
     /// String
     String(&'src str),
     /// Real number
-    Number(f32),
+    Number(f64),
     /// Boolean
     Bool(bool),
+    /// Null, nil, None, etc
+    Null,
 }
 
 /// All operations that can occur between two targets
@@ -56,6 +60,10 @@ pub enum BinaryOp {
     Add,
     /// Subtract two expressions
     Sub,
+    /// Multiply
+    Mul,
+    /// Divide
+    Div,
     /// Equality
     Eq,
     /// Inequality
@@ -182,19 +190,96 @@ impl<'src> Parser<'src> {
         Ok(expr)
     }
 
+    /// A term is factor ( ( "+" | "-" ) factor )*
     fn term(&mut self) -> Result<Expr<'src>, ParseError> {
-        todo!()
+        let mut expr = self.factor()?;
+
+        while matches!(self.peek(), TokenTag::Plus | TokenTag::Minus) {
+            let op = match self.advance() {
+                TokenTag::Plus => BinaryOp::Add,
+                TokenTag::Minus => BinaryOp::Sub,
+                _ => unreachable!(),
+            };
+
+            let right = Box::new(self.factor()?);
+
+            expr = Expr::Binary {
+                op,
+                left: Box::new(expr),
+                right,
+            };
+        }
+
+        Ok(expr)
     }
 
+    /// A factor is unary ( ( "*" | "/" ) unary )*
     fn factor(&mut self) -> Result<Expr<'src>, ParseError> {
-        todo!()
+        let mut expr = self.unary()?;
+
+        while matches!(self.peek(), TokenTag::Star | TokenTag::Slash) {
+            let op = match self.advance() {
+                TokenTag::Star => BinaryOp::Mul,
+                TokenTag::Slash => BinaryOp::Div,
+                _ => unreachable!(),
+            };
+
+            let right = Box::new(self.unary()?);
+
+            expr = Expr::Binary {
+                op,
+                left: Box::new(expr),
+                right,
+            };
+        }
+
+        Ok(expr)
     }
 
+    /// A unary expression is either (! | -) unary | primary
     fn unary(&mut self) -> Result<Expr<'src>, ParseError> {
-        todo!()
+        if matches!(
+            self.peek(),
+            TokenTag::Keyword(Keyword::Bang) | TokenTag::Minus
+        ) {
+            let op = match self.advance() {
+                TokenTag::Keyword(Keyword::Bang) => UnaryOp::Not,
+                TokenTag::Minus => UnaryOp::Neg,
+                _ => unreachable!(),
+            };
+
+            let unary = self.unary()?;
+
+            Ok(Expr::Unary {
+                op,
+                node: Box::new(unary),
+            })
+        } else {
+            self.primary()
+        }
     }
 
+    /// Variable | NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
     fn primary(&mut self) -> Result<Expr<'src>, ParseError> {
-        todo!()
+        let advance = self.advance();
+        let prim = match advance {
+            TokenTag::Number(n) => Expr::Literal(Literal::Number(n)),
+            TokenTag::Keyword(Keyword::True) => Expr::Literal(Literal::Bool(true)),
+            TokenTag::Keyword(Keyword::False) => Expr::Literal(Literal::Bool(false)),
+            TokenTag::Keyword(Keyword::EmptyValue) => Expr::Literal(Literal::Null),
+            TokenTag::Identifier(ident) => Expr::Variable(ident),
+            TokenTag::String(s) => Expr::Literal(Literal::String(s)),
+            TokenTag::OpenParen => {
+                let expr = self.expression()?;
+                self.consume(&TokenTag::CloseParen)?;
+
+                Expr::Grouping(Box::new(expr))
+            }
+            _ => {
+                return Err(ParseError);
+            }
+        };
+
+        Ok(prim)
     }
 }
