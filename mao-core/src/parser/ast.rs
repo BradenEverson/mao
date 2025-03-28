@@ -2,7 +2,7 @@
 
 use std::{error::Error, fmt::Display};
 
-use crate::tokenizer::{Token, TokenTag};
+use crate::tokenizer::{Token, TokenTag, keyword::Keyword};
 
 use super::Parser;
 
@@ -58,40 +58,11 @@ pub enum BinaryOp {
 
 /// An error that occurs whilst parsing
 #[derive(Clone, PartialEq, Debug, Default)]
-pub struct ParseError {
-    /// The error message
-    pub message: String,
-    /// Line of the error
-    pub line: usize,
-    /// Column of the error
-    pub col: usize,
-    /// Length of the error
-    pub len: usize,
-}
-
-impl From<(&str, Token<'_>)> for ParseError {
-    fn from(value: (&str, Token<'_>)) -> Self {
-        let (
-            want,
-            Token {
-                line,
-                col,
-                len,
-                tag,
-            },
-        ) = value;
-        Self {
-            message: format!("Expected `{want}` after `{tag:?}`"),
-            line,
-            col,
-            len,
-        }
-    }
-}
+pub struct ParseError;
 
 impl Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "parser error: {}", self.message)
+        write!(f, "parser :(")
     }
 }
 
@@ -111,6 +82,17 @@ impl<'src> Parser<'src> {
 
     /// Parse a singular statement
     pub fn statement(&mut self) -> Result<Expr<'src>, ParseError> {
+        match self.peek() {
+            TokenTag::Keyword(Keyword::Print) => todo!("printing"),
+            _ => {
+                let res = self.expression()?;
+                self.consume_end()?;
+                Ok(res)
+            }
+        }
+    }
+
+    fn expression(&mut self) -> Result<Expr<'src>, ParseError> {
         todo!()
     }
 }

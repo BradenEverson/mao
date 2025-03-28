@@ -1,5 +1,6 @@
 //! The parser for generating an abstract syntax tree, built in with conditional rules
 
+use ast::ParseError;
 use rand::{RngCore, seq::IndexedRandom};
 
 use crate::tokenizer::{Token, TokenTag};
@@ -62,7 +63,47 @@ impl<'tok> Parser<'tok> {
     }
 
     /// Peeks at the current token
+    #[inline]
     pub fn peek(&self) -> TokenTag<'tok> {
         self.tokens[self.idx.min(self.tokens.len() - 1)].tag
+    }
+
+    /// Peeks at the previous token, does not advance the index
+    #[inline]
+    pub fn peek_back(&self) -> TokenTag<'tok> {
+        self.tokens[self.idx - 1].tag
+    }
+
+    /// Checks if stream is finished
+    fn at_end(&self) -> bool {
+        self.peek() == TokenTag::EOF
+    }
+
+    /// Advances forward and returns the previous token
+    pub fn advance(&mut self) -> TokenTag<'tok> {
+        if !self.at_end() {
+            self.idx += 1
+        }
+
+        if self.idx == 0 {
+            self.tokens[0].tag
+        } else {
+            self.tokens[self.idx - 1].tag
+        }
+    }
+
+    /// Consumes the current token assuming it's the provided Token, failing if not
+    pub fn consume(&mut self, token: &TokenTag<'_>) -> Result<(), ParseError> {
+        if &self.peek() == token {
+            self.idx += 1;
+            Ok(())
+        } else {
+            Err(ParseError)
+        }
+    }
+
+    pub fn consume_end(&mut self) -> Result<(), ParseError> {
+        let tok = self.rules.statements_end_with;
+        self.consume(&tok)
     }
 }
