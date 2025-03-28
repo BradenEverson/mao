@@ -29,7 +29,41 @@ pub enum Keyword {
     VariableDeclaration,
     /// while
     WhileLoopInit,
+
+    /// {
+    OpenBrace,
+    /// }
+    CloseBrace,
+
+    /// =
+    Equal,
+    /// >
+    Greater,
+    /// >=
+    GreaterEqual,
+    /// ==
+    EqualEqual,
+    /// !=
+    BangEqual,
+    /// !
+    Bang,
+    /// <
+    Less,
+    /// <=
+    LessEqual,
 }
+
+const EQUAL_VARIANTS: &[&str] = &["=", "equals", "is"];
+const GREATER_VARIANTS: &[&str] = &[">", "gt", "greater"];
+const GREATEREQUAL_VARIANTS: &[&str] = &[">=", "gte"];
+const EQUALEQUAL_VARIANTS: &[&str] = &["==", "equals"];
+const BANGEQUAL_VARIANTS: &[&str] = &["!=", "inequal"];
+const BANG_VARIANTS: &[&str] = &["!", "not"];
+const LESS_VARIANTS: &[&str] = &["<", "lt", "less"];
+const LESSEQUAL_VARIANTS: &[&str] = &["<=", "lte"];
+
+const OPEN_BRACE_VARIANTS: &[&str] = &["{", ":"];
+const CLOSE_BRACE_VARIANTS: &[&str] = &["}", "end"];
 
 const AND_VARIANTS: &[&str] = &["and", "&&", "/\\"];
 const OR_VARIANTS: &[&str] = &["or", "||", "\\/"];
@@ -74,6 +108,16 @@ impl Keyword {
             (Self::Print, PRINT_VARIANTS),
             (Self::WhileLoopInit, WHILE_VARIANTS),
             (Self::VariableDeclaration, VARIABLE_DECLARATION_VARIANTS),
+            (Self::OpenBrace, OPEN_BRACE_VARIANTS),
+            (Self::CloseBrace, CLOSE_BRACE_VARIANTS),
+            (Self::Equal, EQUAL_VARIANTS),
+            (Self::Greater, GREATER_VARIANTS),
+            (Self::GreaterEqual, GREATEREQUAL_VARIANTS),
+            (Self::EqualEqual, EQUALEQUAL_VARIANTS),
+            (Self::BangEqual, BANGEQUAL_VARIANTS),
+            (Self::Bang, BANG_VARIANTS),
+            (Self::Less, LESS_VARIANTS),
+            (Self::LessEqual, LESSEQUAL_VARIANTS),
         ]
     }
 }

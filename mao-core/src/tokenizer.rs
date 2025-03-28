@@ -26,10 +26,6 @@ pub enum TokenTag<'src> {
     String(&'src str),
     /// A keyword
     Keyword(Keyword),
-    /// {
-    OpenBrace,
-    /// }
-    CloseBrace,
     /// (
     OpenParen,
     /// )
@@ -56,22 +52,6 @@ pub enum TokenTag<'src> {
     Dot,
     /// /
     Slash,
-    /// =
-    Equal,
-    /// >
-    Greater,
-    /// >=
-    GreaterEqual,
-    /// ==
-    EqualEqual,
-    /// !=
-    BangEqual,
-    /// !
-    Bang,
-    /// <
-    Less,
-    /// <=
-    LessEqual,
 
     /// End of file
     EOF,
