@@ -1,6 +1,8 @@
 //! Core tokenizer for the language, defines all `variants` a token may have
 
-use keyword::Keyword;
+use keyword::{Keyword, KeywordRandomizer};
+use rand::{RngCore, SeedableRng, thread_rng};
+use rand_chacha::ChaCha8Rng;
 
 pub mod keyword;
 
@@ -60,15 +62,24 @@ pub enum TokenTag<'src> {
 /// Any object that can be transformed into a token stream
 pub trait Tokenizable {
     /// Creates a token stream with respect to `self`, lifetime should match self's lifetime
-    fn tokenize(&self) -> Vec<Token<'_>>;
+    fn tokenize<RNG: RngCore>(&self, rng: &mut RNG) -> Vec<Token<'_>>;
+    /// Creates a token stream with respect to `self`, lifetime should match self's lifetime with
+    /// no rng
+    fn tokenze_no_rng(&self) -> Vec<Token<'_>> {
+        let mut rng = rand::rng();
+
+        self.tokenize(&mut rng)
+    }
 }
 
 impl<STR> Tokenizable for STR
 where
     STR: AsRef<str>,
 {
-    fn tokenize(&self) -> Vec<Token<'_>> {
-        todo!()
+    fn tokenize<RNG: RngCore>(&self, rng: &mut RNG) -> Vec<Token<'_>> {
+        let keyword_gen = KeywordRandomizer::seeded_start(rng);
+
+        panic!("{keyword_gen:?}")
     }
 }
 
@@ -78,9 +89,9 @@ mod tests {
 
     #[test]
     fn basic_tokenizer_test() {
-        let mut tokens = r#"var i = 0;
+        let mut stream = r#"var i = 0;
 var foo = 10;
 print("this is a little test")"#
-            .tokenize();
+            .tokenze_no_rng();
     }
 }
