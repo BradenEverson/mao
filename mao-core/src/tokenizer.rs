@@ -1,8 +1,7 @@
 //! Core tokenizer for the language, defines all `variants` a token may have
 
 use keyword::{Keyword, KeywordRandomizer};
-use rand::{RngCore, SeedableRng, thread_rng};
-use rand_chacha::ChaCha8Rng;
+use rand::RngCore;
 
 pub mod keyword;
 
