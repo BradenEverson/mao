@@ -102,6 +102,7 @@ impl<'tok> Parser<'tok> {
         }
     }
 
+    /// Consumes the proper end for the tree
     pub fn consume_end(&mut self) -> Result<(), ParseError> {
         let tok = self.rules.statements_end_with;
         self.consume(&tok)

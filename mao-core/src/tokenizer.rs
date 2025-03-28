@@ -129,7 +129,7 @@ where
             let mut len = 1;
             col += 1;
 
-            let tag = if let Some(kwrd) = keyword_gen.try_parse(&stream, idx, &mut len) {
+            let tag = if let Some(kwrd) = keyword_gen.try_parse(stream, idx, &mut len) {
                 for _ in 0..len - 1 {
                     peek.next();
                 }
