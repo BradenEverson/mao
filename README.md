@@ -1,5 +1,5 @@
 # `MaoLang`
-## A language with rules you won't know, until it's too late
+## A language with rules you won't know, until it's too late >:)
 
 Inspired by Mao, a card game where the rules are not known, added randomly other players, and learnt by trial and error, `MaoLang` strives to be the most confusing language, with a dynamic syntax that changes upon each compilation
 
