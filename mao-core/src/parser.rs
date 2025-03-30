@@ -68,6 +68,12 @@ impl<'tok> Parser<'tok> {
         self.tokens[self.idx.min(self.tokens.len() - 1)].tag
     }
 
+    /// Peeks at the current token
+    #[inline]
+    pub fn peek_token(&self) -> Token<'tok> {
+        self.tokens[self.idx.min(self.tokens.len() - 1)]
+    }
+
     /// Peeks at the previous token, does not advance the index
     #[inline]
     pub fn peek_back(&self) -> TokenTag<'tok> {
@@ -98,7 +104,18 @@ impl<'tok> Parser<'tok> {
             self.idx += 1;
             Ok(())
         } else {
-            Err(ParseError)
+            let Token {
+                tag,
+                line,
+                col,
+                len,
+            } = self.peek_token();
+            Err(ParseError {
+                message: format!("Expected `{token:?}`, found `{tag:?}`"),
+                line,
+                col,
+                len,
+            })
         }
     }
 
@@ -106,5 +123,53 @@ impl<'tok> Parser<'tok> {
     pub fn consume_end(&mut self) -> Result<(), ParseError> {
         let tok = self.rules.statements_end_with;
         self.consume(&tok)
+    }
+
+    /// If the current rules require parenthesis, consume 'em
+    pub fn consume_close_paren_if_necessary(&mut self) -> Result<(), ParseError> {
+        if self.rules.parenthesis {
+            if let Ok(_) = self.consume(&TokenTag::CloseParen) {
+                Ok(())
+            } else {
+                let Token {
+                    tag: _,
+                    line,
+                    col,
+                    len,
+                } = self.peek_token();
+                Err(ParseError {
+                    message: format!("No closing parenthesis found for statement"),
+                    line,
+                    col,
+                    len,
+                })
+            }
+        } else {
+            Ok(())
+        }
+    }
+
+    /// If the current rules require parenthesis, consume 'em
+    pub fn consume_open_paren_if_necessary(&mut self) -> Result<(), ParseError> {
+        if self.rules.parenthesis {
+            if let Ok(_) = self.consume(&TokenTag::OpenParen) {
+                Ok(())
+            } else {
+                let Token {
+                    tag: _,
+                    line,
+                    col,
+                    len,
+                } = self.peek_token();
+                Err(ParseError {
+                    message: format!("No opening parenthesis found for statement"),
+                    line,
+                    col,
+                    len,
+                })
+            }
+        } else {
+            Ok(())
+        }
     }
 }

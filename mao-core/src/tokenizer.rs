@@ -132,6 +132,7 @@ where
             let tag = if let Some(kwrd) = keyword_gen.try_parse(stream, idx, &mut len) {
                 for _ in 0..len - 1 {
                     peek.next();
+                    col += 1;
                 }
 
                 TokenTag::Keyword(kwrd)

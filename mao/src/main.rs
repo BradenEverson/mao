@@ -4,7 +4,10 @@
 
 use std::{env, fs::File, io::Read, process};
 
-use mao_core::tokenizer::{Tokenizable, TokenizeError};
+use mao_core::{
+    parser::{Parser, ast::ParseError},
+    tokenizer::{Tokenizable, TokenizeError},
+};
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 use sha2::{Digest, Sha256};
@@ -27,7 +30,7 @@ fn main() {
     }
 }
 
-/// Prints some useful help info
+/// Prints some "useful" help info
 fn print_help() {
     println!("Mao Interpreter {}", VERSION);
     println!("Usage: who knows?");
@@ -93,30 +96,30 @@ fn run_file(file_path: &str) {
         }
     };
 
-    println!("{tokens:?}");
-    //
-    // let mut parser = Parser::with_tokens(&tokens);
-    // let ast = match parser.parse_many() {
-    //     Ok(ast) => ast,
-    //     Err(err) => {
-    //         let ParseError {
-    //             message,
-    //             len,
-    //             col,
-    //             line,
-    //         } = err;
-    //
-    //         eprintln!("parser error: {}", message);
-    //         eprintln!(" -> {}:{}:{} ", file_path, line, col);
-    //         if let Some(line) = buf.lines().nth(line - 1) {
-    //             println!(" | {line}");
-    //             println!(" | {}{}", " ".repeat(col - len), "~".repeat(len));
-    //         }
-    //
-    //         process::exit(1);
-    //     }
-    // };
-    //
+    let mut parser = Parser::from_rng(&mut rng).with_tokens(&tokens);
+    let ast = match parser.parse() {
+        Ok(ast) => ast,
+        Err(err) => {
+            let ParseError {
+                message,
+                len,
+                col,
+                line,
+            } = err;
+
+            eprintln!("{message}");
+            eprintln!(" -> {}:{}:{} ", file_path, line, col);
+            if let Some(line) = buf.lines().nth(line - 1) {
+                println!(" | {line}");
+                println!(" | {}{}", " ".repeat(col - len), "~".repeat(len));
+            }
+
+            process::exit(1);
+        }
+    };
+
+    println!("{ast:?}");
+
     // let mut interp = Interpretter::default();
     // for node in ast {
     //     if let Err(err) = interp.eval(node) {

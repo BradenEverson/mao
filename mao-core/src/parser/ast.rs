@@ -2,7 +2,7 @@
 
 use std::{error::Error, fmt::Display};
 
-use crate::tokenizer::{TokenTag, keyword::Keyword};
+use crate::tokenizer::{Token, TokenTag, keyword::Keyword};
 
 use super::Parser;
 
@@ -86,7 +86,16 @@ pub enum BinaryOp {
 
 /// An error that occurs whilst parsing
 #[derive(Clone, PartialEq, Debug, Default)]
-pub struct ParseError;
+pub struct ParseError {
+    /// The error message
+    pub message: String,
+    /// Error token's line
+    pub line: usize,
+    /// Error token's column
+    pub col: usize,
+    /// Error token's len
+    pub len: usize,
+}
 
 impl Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -113,7 +122,9 @@ impl<'src> Parser<'src> {
         match self.peek() {
             TokenTag::Keyword(Keyword::Print) => {
                 self.advance();
+                self.consume_open_paren_if_necessary()?;
                 let next = self.expression()?;
+                self.consume_close_paren_if_necessary()?;
                 self.consume_end()?;
                 Ok(Expr::Print(Box::new(next)))
             }
@@ -136,7 +147,18 @@ impl<'src> Parser<'src> {
 
                     Ok(Expr::Assignment(name, Box::new(assignment)))
                 } else {
-                    Err(ParseError)
+                    let Token {
+                        tag,
+                        line,
+                        col,
+                        len,
+                    } = self.peek_token();
+                    Err(ParseError {
+                        message: format!("Expected a variable expression, found `{tag:?}`"),
+                        line,
+                        col,
+                        len,
+                    })
                 }
             }
 
@@ -287,7 +309,18 @@ impl<'src> Parser<'src> {
                 Expr::Grouping(Box::new(expr))
             }
             _ => {
-                return Err(ParseError);
+                let Token {
+                    tag,
+                    line,
+                    col,
+                    len,
+                } = self.peek_token();
+                return Err(ParseError {
+                    message: format!("Expected primary statement, found `{tag:?}`"),
+                    line,
+                    col,
+                    len,
+                });
             }
         };
 
