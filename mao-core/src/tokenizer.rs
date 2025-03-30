@@ -66,7 +66,7 @@ pub enum TokenTag<'src> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TokenizeError {
     /// The invalid message
-    message: String,
+    pub message: String,
     /// The line that is invalid
     pub line: usize,
     /// The column in that line that's invalid
@@ -245,11 +245,11 @@ where
                         }
                     }
 
-                    ch if ch.is_alphanumeric() || ch == '_' => {
+                    ch if ch.is_alphanumeric() || ch == '_' || ch == '.' => {
                         let mut end = idx;
 
                         while let Some((idx2, next)) = peek.peek() {
-                            if !(next.is_alphanumeric() || *next == '_') {
+                            if !(next.is_alphanumeric() || *next == '_' || *next == '.') {
                                 break;
                             }
 
@@ -262,7 +262,7 @@ where
                         let word = &self.as_ref()[idx..=end];
                         if let Err(Some(was)) = keyword_gen.try_from_str(word) {
                             return Err(TokenizeError::new(
-                                format!("Invalid keyword {word}, did you mean {was}?"),
+                                format!("Invalid keyword `{word}`, did you mean `{was}`?"),
                                 line,
                                 col,
                             ));

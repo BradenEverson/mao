@@ -1,0 +1,14 @@
+[package]
+name = "mao"
+version = "0.1.0"
+edition = "2024"
+authors.workspace = true
+
+[dependencies]
+mao-core = {path = "../mao-core"}
+rand = "0.9.0"
+rand_chacha = "0.9.0"
+sha2 = "0.10.8"
+
+[lints]
+workspace = true

@@ -100,7 +100,6 @@ const PRINT_VARIANTS: &[&str] = &[
     "puts",
     "echo",
     "Console.WriteLine",
-    "std::cout",
     "System.out.println",
     "println",
     "fmt.Println",
@@ -109,7 +108,7 @@ const PRINT_VARIANTS: &[&str] = &[
 ];
 
 /// All valid `while` variants
-const WHILE_VARIANTS: &[&str] = &["while", "during", "whilst", "until", "as_long_as", "🔁"];
+const WHILE_VARIANTS: &[&str] = &["while", "during", "whilst", "until", "as_long_as"];
 
 /// All valid `var` variants
 const VARIABLE_DECLARATION_VARIANTS: &[&str] = &["var", "let", "auto", "$", "val", "new"];
@@ -224,6 +223,16 @@ mod tests {
     use crate::tokenizer::keyword::Keyword;
 
     use super::KeywordRandomizer;
+
+    #[test]
+    fn print() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let keywords = KeywordRandomizer::seeded_start(&mut rng);
+
+        let attempt = keywords.try_from_str("fmt.Println");
+
+        assert_eq!(attempt.unwrap(), Keyword::Print)
+    }
 
     #[test]
     fn try_from_string() {
