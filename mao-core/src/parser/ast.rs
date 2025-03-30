@@ -316,7 +316,7 @@ impl<'src> Parser<'src> {
  *     "each": ForLoopInit
  *     ">": Greater
  *     "gte": GreaterEqual
- *     "👎": False
+ *     ":(": False
  *     "=": Equal
  *     "equals": EqualEqual
  *     "lte": LessEqual

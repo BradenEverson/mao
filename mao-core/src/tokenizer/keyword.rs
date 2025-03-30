@@ -81,9 +81,9 @@ const AND_VARIANTS: &[&str] = &["and", "&&", r#"/\"#, "alongside"];
 const OR_VARIANTS: &[&str] = &["or", "||", r#"\/"#];
 
 /// All valid `false` variants
-const FALSE_VARIANTS: &[&str] = &["false", "False", "FALSE", "incorrect", "nah", "👎"];
+const FALSE_VARIANTS: &[&str] = &["false", "False", "FALSE", "incorrect", "nah", ":("];
 /// All valid `true` variants
-const TRUE_VARIANTS: &[&str] = &["true", "True", "TRUE", "correct", "yah", "👍"];
+const TRUE_VARIANTS: &[&str] = &["true", "True", "TRUE", "correct", "yah", ":)"];
 
 /// All valid `for` variants
 const FOR_VARIANTS: &[&str] = &["for", "each"];
