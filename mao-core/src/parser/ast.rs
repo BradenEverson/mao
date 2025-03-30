@@ -50,6 +50,17 @@ pub enum Literal<'src> {
     Null,
 }
 
+impl Display for Literal<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Bool(b) => write!(f, "{b}"),
+            Self::String(s) => write!(f, "{s}"),
+            Self::Number(n) => write!(f, "{n}"),
+            Self::Null => write!(f, "null"),
+        }
+    }
+}
+
 /// All operations that can occur between two targets
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum UnaryOp {

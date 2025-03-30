@@ -5,6 +5,7 @@
 use std::{env, fs::File, io::Read, process};
 
 use mao_core::{
+    interp::Interpretter,
     parser::{Parser, ast::ParseError},
     tokenizer::{Tokenizable, TokenizeError},
 };
@@ -118,13 +119,11 @@ fn run_file(file_path: &str) {
         }
     };
 
-    println!("{ast:?}");
-
-    // let mut interp = Interpretter::default();
-    // for node in ast {
-    //     if let Err(err) = interp.eval(node) {
-    //         eprintln!("Runtime error: {}", err);
-    //         process::exit(1);
-    //     }
-    // }
+    let mut interp = Interpretter::default();
+    for node in ast {
+        if let Err(err) = interp.eval(node) {
+            eprintln!("Runtime error: {}", err);
+            process::exit(1);
+        }
+    }
 }
