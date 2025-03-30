@@ -1,5 +1,5 @@
 [workspace]
-members =  [ "mao","mao-core"]
+members =  [ "maolang","maolang-core"]
 resolver = "2"
 
 [workspace.package]
