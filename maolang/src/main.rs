@@ -4,7 +4,7 @@
 
 use std::{env, fs::File, io::Read, process};
 
-use mao_core::{
+use maolang_core::{
     interp::Interpretter,
     parser::{Parser, ast::ParseError},
     tokenizer::{Tokenizable, TokenizeError},
