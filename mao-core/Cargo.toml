@@ -3,6 +3,11 @@ name = "mao-core"
 version = "0.1.0"
 edition = "2024"
 authors.workspace = true
+description = "Core components (tokenizer, parser, evaluator) for the Mao language"
+license = "MIT OR Apache-2.0"
+authors.workspace = true
+repository = "https://github.com/BradenEverson/mao"
+readme = "../README.md"
 
 [dependencies]
 rand = "0.9.0"

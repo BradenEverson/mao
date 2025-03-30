@@ -5,7 +5,7 @@ edition = "2024"
 description = "A language with dynamic and annoying rules"
 license = "MIT OR Apache-2.0"
 authors.workspace = true
-repository = "https://github.com/BradenEverson/kronk"
+repository = "https://github.com/BradenEverson/mao"
 readme = "../README.md"
 
 [dependencies]
