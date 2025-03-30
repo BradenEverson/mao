@@ -330,7 +330,7 @@ mod tests {
     use crate::{
         parser::{
             Parser,
-            ast::{Expr, Literal},
+            ast::{BinaryOp, Expr, Literal, UnaryOp},
         },
         tokenizer::Tokenizable,
     };
@@ -347,5 +347,167 @@ mod tests {
             ast,
             &Expr::Assignment("i", Box::new(Expr::Literal(Literal::Number(0.0))))
         )
+    }
+
+    #[test]
+    fn print_statement() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let stream = "fmt.Println 42 ."
+            .tokenize(&mut rng)
+            .expect("Valid tokenization");
+        let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
+
+        let ast = &parser.parse().expect("Parse to AST")[0];
+
+        assert_eq!(
+            ast,
+            &Expr::Print(Box::new(Expr::Literal(Literal::Number(42.0))))
+        );
+    }
+
+    #[test]
+    fn binary_operations() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let stream = "1 + 2 * 3 ."
+            .tokenize(&mut rng)
+            .expect("Valid tokenization");
+        let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
+
+        let ast = &parser.parse().expect("Parse to AST")[0];
+
+        assert_eq!(
+            ast,
+            &Expr::Binary {
+                op: BinaryOp::Add,
+                left: Box::new(Expr::Literal(Literal::Number(1.0))),
+                right: Box::new(Expr::Binary {
+                    op: BinaryOp::Mul,
+                    left: Box::new(Expr::Literal(Literal::Number(2.0))),
+                    right: Box::new(Expr::Literal(Literal::Number(3.0))),
+                }),
+            }
+        );
+    }
+
+    #[test]
+    fn comparison_operations() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let stream = "1 < 2 .".tokenize(&mut rng).expect("Valid tokenization");
+        let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
+
+        let ast = &parser.parse().expect("Parse to AST")[0];
+
+        assert_eq!(
+            ast,
+            &Expr::Binary {
+                op: BinaryOp::Lt,
+                left: Box::new(Expr::Literal(Literal::Number(1.0))),
+                right: Box::new(Expr::Literal(Literal::Number(2.0))),
+            }
+        );
+    }
+
+    #[test]
+    fn equality_operations() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let stream = "1 equals 1 ."
+            .tokenize(&mut rng)
+            .expect("Valid tokenization");
+        let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
+
+        let ast = &parser.parse().expect("Parse to AST")[0];
+
+        assert_eq!(
+            ast,
+            &Expr::Binary {
+                op: BinaryOp::Eq,
+                left: Box::new(Expr::Literal(Literal::Number(1.0))),
+                right: Box::new(Expr::Literal(Literal::Number(1.0))),
+            }
+        );
+    }
+
+    #[test]
+    fn unary_operations() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let stream = "not true .".tokenize(&mut rng).expect("Valid tokenization");
+        let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
+
+        let ast = &parser.parse().expect("Parse to AST")[0];
+
+        assert_eq!(
+            ast,
+            &Expr::Unary {
+                op: UnaryOp::Not,
+                node: Box::new(Expr::Literal(Literal::Bool(true))),
+            }
+        );
+    }
+
+    #[test]
+    fn grouping() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let stream = "(1 + 2) * 3 ."
+            .tokenize(&mut rng)
+            .expect("Valid tokenization");
+        let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
+
+        let ast = &parser.parse().expect("Parse to AST")[0];
+        let expected = Expr::Binary {
+            op: BinaryOp::Mul,
+            left: Box::new(Expr::Grouping(Box::new(Expr::Binary {
+                op: BinaryOp::Add,
+                left: Box::new(Expr::Literal(Literal::Number(1.0))),
+                right: Box::new(Expr::Literal(Literal::Number(2.0))),
+            }))),
+            right: Box::new(Expr::Literal(Literal::Number(3.0))),
+        };
+
+        assert_eq!(ast, &expected);
+    }
+
+    #[test]
+    fn variable_reference() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let stream = "x .".tokenize(&mut rng).expect("Valid tokenization");
+        let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
+
+        let ast = &parser.parse().expect("Parse to AST")[0];
+
+        assert_eq!(ast, &Expr::Variable("x"));
+    }
+
+    #[test]
+    fn complex_expression() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let stream = "$ x = 5 * (3 + 2) . fmt.Println x < 10 ."
+            .tokenize(&mut rng)
+            .expect("Valid tokenization");
+        let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
+
+        let ast = parser.parse().expect("Parse to AST");
+
+        assert_eq!(
+            ast,
+            vec![
+                Expr::Assignment(
+                    "x",
+                    Box::new(Expr::Binary {
+                        op: BinaryOp::Mul,
+                        left: Box::new(Expr::Literal(Literal::Number(5.0))),
+                        right: Box::new(Expr::Grouping(Box::new(Expr::Binary {
+                            op: BinaryOp::Add,
+                            left: Box::new(Expr::Literal(Literal::Number(3.0))),
+                            right: Box::new(Expr::Literal(Literal::Number(2.0))),
+                        }))),
+                    }),
+                ),
+                Expr::Print(Box::new(Expr::Binary {
+                    op: BinaryOp::Lt,
+                    left: Box::new(Expr::Variable("x")),
+                    right: Box::new(Expr::Literal(Literal::Number(10.0))),
+                })),
+            ]
+        );
     }
 }
