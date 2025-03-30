@@ -112,6 +112,7 @@ impl<'src> Parser<'src> {
     pub fn statement(&mut self) -> Result<Expr<'src>, ParseError> {
         match self.peek() {
             TokenTag::Keyword(Keyword::Print) => {
+                self.advance();
                 let next = self.expression()?;
                 self.consume_end()?;
                 Ok(Expr::Print(Box::new(next)))
