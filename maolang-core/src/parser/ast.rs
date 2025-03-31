@@ -397,7 +397,7 @@ mod tests {
     #[test]
     fn print_statement() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let stream = "fmt.Println 42 ."
+        let stream = "fmt.Println(42) ."
             .tokenize(&mut rng)
             .expect("Valid tokenization");
         let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
@@ -525,7 +525,7 @@ mod tests {
     #[test]
     fn complex_expression() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let stream = "$ x = 5 * (3 + 2) . fmt.Println x < 10 ."
+        let stream = "$ x = 5 * (3 + 2) . fmt.Println(x < 10) ."
             .tokenize(&mut rng)
             .expect("Valid tokenization");
         let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);

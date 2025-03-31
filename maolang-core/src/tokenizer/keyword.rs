@@ -153,7 +153,12 @@ pub struct KeywordRandomizer {
 
 impl KeywordRandomizer {
     /// Tries to parse a keyword from a stream
-    pub fn try_parse(&self, stream: &str, idx: usize, len: &mut usize) -> Option<Keyword> {
+    pub fn try_parse(
+        &self,
+        stream: &str,
+        idx: usize,
+        len: &mut usize,
+    ) -> Result<Keyword, Option<&'static str>> {
         let characters: Vec<_> = stream.chars().collect();
         let mut idx2 = idx;
 
@@ -165,7 +170,21 @@ impl KeywordRandomizer {
             let pot_kwrd = &stream[idx..=idx2];
             if let Ok(keyword) = self.try_from_str(pot_kwrd) {
                 *len = idx2 - idx + 1;
-                return Some(keyword);
+                return Ok(keyword);
+            } else {
+                for (root, variants) in Keyword::all() {
+                    if variants.contains(&pot_kwrd) {
+                        if let Some(proper_variant) = self
+                            .ctx
+                            .iter()
+                            .find(|(_, kwrd)| **kwrd == root)
+                            .map(|(var, _)| *var)
+                        {
+                            *len = idx2 - idx + 1;
+                            return Err(Some(proper_variant));
+                        }
+                    }
+                }
             }
 
             if idx2 == 0 {
@@ -175,7 +194,7 @@ impl KeywordRandomizer {
             idx2 -= 1;
         }
 
-        None
+        Err(None)
     }
 
     /// Seeds all keywords

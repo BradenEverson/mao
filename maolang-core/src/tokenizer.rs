@@ -129,154 +129,157 @@ where
             let mut len = 1;
             col += 1;
 
-            let tag = if let Some(kwrd) = keyword_gen.try_parse(stream, idx, &mut len) {
-                for _ in 0..len - 1 {
-                    peek.next();
-                    col += 1;
+            let tag = match keyword_gen.try_parse(stream, idx, &mut len) {
+                Ok(kwrd) => {
+                    for _ in 0..len - 1 {
+                        peek.next();
+                        col += 1;
+                    }
+
+                    TokenTag::Keyword(kwrd)
                 }
+                Err(Some(was)) => {
+                    let word = &self.as_ref()[col..=col + len];
+                    return Err(TokenizeError::new(
+                        format!("Invalid keyword `{word}`, did you mean `{was}`?"),
+                        line,
+                        col,
+                    ));
+                }
+                _ => {
+                    match ch {
+                        '[' => TokenTag::OpenBracket,
+                        ']' => TokenTag::CloseBracket,
 
-                TokenTag::Keyword(kwrd)
-            } else {
-                match ch {
-                    '[' => TokenTag::OpenBracket,
-                    ']' => TokenTag::CloseBracket,
+                        '(' => TokenTag::OpenParen,
+                        ')' => TokenTag::CloseParen,
 
-                    '(' => TokenTag::OpenParen,
-                    ')' => TokenTag::CloseParen,
+                        ';' => TokenTag::Semicolon,
+                        '.' => TokenTag::Dot,
 
-                    ';' => TokenTag::Semicolon,
-                    '.' => TokenTag::Dot,
-
-                    '+' => match peek.peek() {
-                        Some((_, '+')) => {
-                            peek.next();
-                            TokenTag::PlusPlus
-                        }
-                        Some((_, '=')) => {
-                            peek.next();
-                            TokenTag::PlusEq
-                        }
-                        _ => TokenTag::Plus,
-                    },
-                    '-' => TokenTag::Minus,
-                    '*' => TokenTag::Star,
-                    '/' => match peek.peek() {
-                        Some((_, '/')) => {
-                            for (_, ch) in peek.by_ref() {
-                                if ch == '\n' {
-                                    break;
-                                }
+                        '+' => match peek.peek() {
+                            Some((_, '+')) => {
+                                peek.next();
+                                TokenTag::PlusPlus
                             }
-                            continue;
-                        }
-                        Some((_, '*')) => {
-                            peek.next();
-                            while let Some((_, ch)) = peek.next() {
-                                if ch == '*' {
-                                    if let Some((_, '/')) = peek.peek() {
-                                        peek.next();
+                            Some((_, '=')) => {
+                                peek.next();
+                                TokenTag::PlusEq
+                            }
+                            _ => TokenTag::Plus,
+                        },
+                        '-' => TokenTag::Minus,
+                        '*' => TokenTag::Star,
+                        '/' => match peek.peek() {
+                            Some((_, '/')) => {
+                                for (_, ch) in peek.by_ref() {
+                                    if ch == '\n' {
                                         break;
                                     }
                                 }
+                                continue;
                             }
+                            Some((_, '*')) => {
+                                peek.next();
+                                while let Some((_, ch)) = peek.next() {
+                                    if ch == '*' {
+                                        if let Some((_, '/')) = peek.peek() {
+                                            peek.next();
+                                            break;
+                                        }
+                                    }
+                                }
 
+                                continue;
+                            }
+                            _ => TokenTag::Slash,
+                        },
+
+                        '\n' => {
+                            col = 0;
+                            line += 1;
                             continue;
                         }
-                        _ => TokenTag::Slash,
-                    },
 
-                    '\n' => {
-                        col = 0;
-                        line += 1;
-                        continue;
-                    }
+                        ',' => TokenTag::Comma,
 
-                    ',' => TokenTag::Comma,
+                        ws if ws.is_whitespace() => continue,
 
-                    ws if ws.is_whitespace() => continue,
+                        num if num.is_numeric() => {
+                            let mut curr = String::new();
+                            curr.push(num);
 
-                    num if num.is_numeric() => {
-                        let mut curr = String::new();
-                        curr.push(num);
+                            let mut dot = false;
+                            while let Some((_, next)) = peek.peek() {
+                                if next.is_numeric() {
+                                    col += 1;
+                                    len += 1;
+                                    curr.push(peek.next().unwrap().1);
+                                } else if *next == '.' && !dot {
+                                    col += 1;
+                                    len += 1;
+                                    curr.push(peek.next().unwrap().1);
+                                    dot = true;
+                                } else {
+                                    break;
+                                }
+                            }
 
-                        let mut dot = false;
-                        while let Some((_, next)) = peek.peek() {
-                            if next.is_numeric() {
-                                col += 1;
-                                len += 1;
-                                curr.push(peek.next().unwrap().1);
-                            } else if *next == '.' && !dot {
-                                col += 1;
-                                len += 1;
-                                curr.push(peek.next().unwrap().1);
-                                dot = true;
+                            // Unwrap safety, as we build the number we are ensuring that only numeric
+                            // characters are added to it, this cannot fail
+                            TokenTag::Number(curr.parse().unwrap())
+                        }
+
+                        '"' => {
+                            let mut idx2 = idx;
+                            let mut ended = false;
+
+                            for (_, c) in peek.by_ref() {
+                                if c != '"' {
+                                    idx2 += 1;
+                                    col += 1;
+                                    len += 1;
+                                } else {
+                                    ended = true;
+                                    break;
+                                }
+                            }
+
+                            if ended {
+                                TokenTag::String(&self.as_ref()[idx + 1..=idx2])
                             } else {
-                                break;
+                                return Err(TokenizeError::new(
+                                    r#"Expected End of String: `"`"#,
+                                    line,
+                                    col,
+                                ));
                             }
                         }
 
-                        // Unwrap safety, as we build the number we are ensuring that only numeric
-                        // characters are added to it, this cannot fail
-                        TokenTag::Number(curr.parse().unwrap())
-                    }
+                        ch if ch.is_alphanumeric() || ch == '_' => {
+                            let mut end = idx;
 
-                    '"' => {
-                        let mut idx2 = idx;
-                        let mut ended = false;
+                            while let Some((idx2, next)) = peek.peek() {
+                                if !(next.is_alphanumeric() || *next == '_') {
+                                    break;
+                                }
 
-                        for (_, c) in peek.by_ref() {
-                            if c != '"' {
-                                idx2 += 1;
+                                end = *idx2;
                                 col += 1;
                                 len += 1;
-                            } else {
-                                ended = true;
-                                break;
-                            }
-                        }
-
-                        if ended {
-                            TokenTag::String(&self.as_ref()[idx + 1..=idx2])
-                        } else {
-                            return Err(TokenizeError::new(
-                                r#"Expected End of String: `"`"#,
-                                line,
-                                col,
-                            ));
-                        }
-                    }
-
-                    ch if ch.is_alphanumeric() || ch == '_' || ch == '.' => {
-                        let mut end = idx;
-
-                        while let Some((idx2, next)) = peek.peek() {
-                            if !(next.is_alphanumeric() || *next == '_' || *next == '.') {
-                                break;
+                                peek.next();
                             }
 
-                            end = *idx2;
-                            col += 1;
-                            len += 1;
-                            peek.next();
-                        }
-
-                        let word = &self.as_ref()[idx..=end];
-                        if let Err(Some(was)) = keyword_gen.try_from_str(word) {
-                            return Err(TokenizeError::new(
-                                format!("Invalid keyword `{word}`, did you mean `{was}`?"),
-                                line,
-                                col,
-                            ));
-                        } else {
+                            let word = &self.as_ref()[idx..=end];
                             TokenTag::Identifier(word)
                         }
-                    }
-                    bad => {
-                        return Err(TokenizeError::new(
-                            format!("Invalid token {bad}"),
-                            line,
-                            col,
-                        ));
+                        bad => {
+                            return Err(TokenizeError::new(
+                                format!("Invalid token {bad}"),
+                                line,
+                                col,
+                            ));
+                        }
                     }
                 }
             };
