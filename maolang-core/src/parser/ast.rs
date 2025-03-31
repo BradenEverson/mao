@@ -169,12 +169,18 @@ impl<'src> Parser<'src> {
             TokenTag::Keyword(Keyword::OpenBrace) => self.block(),
             TokenTag::Keyword(Keyword::ConditionalCheck) => self.if_statement(),
             TokenTag::Keyword(Keyword::WhileLoopInit) => self.while_loop(),
+            TokenTag::Keyword(Keyword::ForLoopInit) => self.for_loop(),
             _ => {
                 let res = self.expression()?;
                 self.consume_end()?;
                 Ok(res)
             }
         }
+    }
+
+    /// A for loop is `for` (statment; expression; statement) block
+    fn for_loop(&mut self) -> Result<Expr<'src>, ParseError> {
+        todo!()
     }
 
     /// A while loop is `while` (expression) block
