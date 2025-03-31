@@ -32,6 +32,14 @@ impl<'a> Interpretter<'a> {
     /// Interprets an AST
     pub fn eval(&mut self, ast: Expr<'a>) -> Result<Literal<'a>, RuntimeError> {
         match ast {
+            Expr::ForLoop { init, cond, inc } => {
+                self.eval(*init)?;
+                while self.eval(*cond.clone())?.bool()? {
+                    self.eval(*inc.clone())?;
+                }
+
+                Ok(Literal::Null)
+            }
             Expr::WhileLoop { condition, eval } => {
                 while self.eval(*condition.clone())?.bool()? {
                     self.eval(*eval.clone())?;

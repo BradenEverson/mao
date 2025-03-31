@@ -9,6 +9,15 @@ use super::Parser;
 /// A node in the abstract syntax tree, represents all possible operations that can occur
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr<'src> {
+    /// A for loop
+    ForLoop {
+        /// An inistialization
+        init: Box<Expr<'src>>,
+        /// The conditional check
+        cond: Box<Expr<'src>>,
+        /// The update after each run
+        inc: Box<Expr<'src>>,
+    },
     /// A while loop
     WhileLoop {
         /// The condition checked before running
