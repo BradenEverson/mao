@@ -92,7 +92,7 @@ const IF_VARIANTS: &[&str] = &["if", "case", "check"];
 /// All valid `else` variants
 const ELSE_VARIANTS: &[&str] = &["else", "then", "otherwise"];
 /// All valid `nil` variants
-const EMPTY_VARIANTS: &[&str] = &["nil", "None", "null", "NULL", "undefined", "void"];
+const EMPTY_VARIANTS: &[&str] = &["nil", "None", "null", "undefined", "void"];
 
 /// All valid printing variants
 const PRINT_VARIANTS: &[&str] = &[
