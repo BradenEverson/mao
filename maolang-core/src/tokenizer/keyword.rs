@@ -54,7 +54,7 @@ pub enum Keyword {
 }
 
 /// All valid assignment variants
-const EQUAL_VARIANTS: &[&str] = &["=", "equals", "is"];
+const EQUAL_VARIANTS: &[&str] = &["=", "is"];
 /// All valid > variants
 const GREATER_VARIANTS: &[&str] = &[">", "gt", "greater"];
 /// All valid >= variants
