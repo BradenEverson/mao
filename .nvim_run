@@ -1,1 +1,1 @@
-cargo run -r -- samples/variables.mao
+cargo run -r -- samples/hello.mao
