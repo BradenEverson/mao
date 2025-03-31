@@ -9,8 +9,8 @@ pub mod ast;
 
 /// All valid statement ends
 pub const VALID_ENDS: &[TokenTag<'static>] = &[
-    TokenTag::Semicolon,
     TokenTag::Dot,
+    TokenTag::Semicolon,
     TokenTag::Identifier("done"),
 ];
 

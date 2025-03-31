@@ -88,8 +88,8 @@ fn run_file(file_path: &str) {
             eprintln!("{message}");
             eprintln!(" -> {}:{}:{} ", file_path, line, col);
             if let Some(line) = buf.lines().nth(line - 1) {
-                println!(" | {line}");
-                println!(" | {}^", "-".repeat(col - 1));
+                eprintln!(" | {line}");
+                eprintln!(" | {}^", "-".repeat(col - 1));
             }
             process::exit(1);
         }
@@ -109,8 +109,8 @@ fn run_file(file_path: &str) {
             eprintln!("{message}");
             eprintln!(" -> {}:{}:{} ", file_path, line, col);
             if let Some(line) = buf.lines().nth(line - 1) {
-                println!(" | {line}");
-                println!(" | {}{}", " ".repeat(col - len), "~".repeat(len));
+                eprintln!(" | {line}");
+                eprintln!(" | {}{}", " ".repeat(col - len), "~".repeat(len));
             }
 
             process::exit(1);

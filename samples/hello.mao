@@ -1,1 +1,1 @@
-say "This is the most language" .
+console.log "This is the most language ever" done

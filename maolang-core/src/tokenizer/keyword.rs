@@ -73,7 +73,7 @@ const LESSEQUAL_VARIANTS: &[&str] = &["<=", "lte"];
 /// All valid `{` variants
 const OPEN_BRACE_VARIANTS: &[&str] = &["{", ":"];
 /// All valid `}` variants
-const CLOSE_BRACE_VARIANTS: &[&str] = &["}", "end"];
+const CLOSE_BRACE_VARIANTS: &[&str] = &["end", "}"];
 
 /// All valid `and` variants
 const AND_VARIANTS: &[&str] = &["and", "&&", r#"/\"#, "alongside"];
@@ -101,9 +101,9 @@ const PRINT_VARIANTS: &[&str] = &[
     "echo",
     "Console.WriteLine",
     "System.out.println",
+    "console.log",
     "println",
     "fmt.Println",
-    "console.log",
     "say",
 ];
 
