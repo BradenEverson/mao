@@ -9,6 +9,17 @@ use super::Parser;
 /// A node in the abstract syntax tree, represents all possible operations that can occur
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr<'src> {
+    /// A conditional executor
+    Conditional {
+        /// The condition being checked
+        condition: Box<Expr<'src>>,
+        /// What is executed if the condition is true
+        true_branch: Box<Expr<'src>>,
+        /// What is optionally executed if else
+        else_branch: Option<Box<Expr<'src>>>,
+    },
+    /// A block to be executed
+    Block(Vec<Expr<'src>>),
     /// Print an expression's literal result
     Print(Box<Expr<'src>>),
     /// A variable reference
@@ -139,12 +150,51 @@ impl<'src> Parser<'src> {
                 self.consume_end()?;
                 Ok(Expr::Print(Box::new(next)))
             }
+            TokenTag::Keyword(Keyword::OpenBrace) => self.block(),
+            TokenTag::Keyword(Keyword::ConditionalCheck) => self.if_statement(),
             _ => {
                 let res = self.expression()?;
                 self.consume_end()?;
                 Ok(res)
             }
         }
+    }
+
+    /// A block is `{ (expression)* }`
+    fn block(&mut self) -> Result<Expr<'src>, ParseError> {
+        self.consume(&TokenTag::Keyword(Keyword::OpenBrace))?;
+        let mut block_items = vec![];
+
+        while self.peek() != TokenTag::Keyword(Keyword::CloseBrace) {
+            let expr = self.statement()?;
+            block_items.push(expr);
+        }
+
+        self.consume(&TokenTag::Keyword(Keyword::CloseBrace))?;
+        Ok(Expr::Block(block_items))
+    }
+
+    /// An If statement is:
+    /// `if ( equality ) { `block` } ( else { `block` })?`
+    fn if_statement(&mut self) -> Result<Expr<'src>, ParseError> {
+        self.consume(&TokenTag::Keyword(Keyword::ConditionalCheck))?;
+        self.consume_open_paren_if_necessary()?;
+        let check = self.equality()?;
+        self.consume_close_paren_if_necessary()?;
+        let block = self.block()?;
+
+        let mut else_branch = None;
+
+        if self.peek() == TokenTag::Keyword(Keyword::ConditionalElse) {
+            self.advance();
+            else_branch = Some(Box::new(self.statement()?));
+        }
+
+        Ok(Expr::Conditional {
+            condition: Box::new(check),
+            true_branch: Box::new(block),
+            else_branch,
+        })
     }
 
     /// an expression is equality  | var ident = equality
@@ -379,6 +429,32 @@ mod tests {
         },
         tokenizer::Tokenizable,
     };
+
+    #[test]
+    fn if_statement() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let stream = r#"
+case (true) {
+    $ foo = 10 .
+}
+            "#
+        .tokenize(&mut rng)
+        .expect("Valid tokenization");
+        let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
+
+        let ast = parser.parse().expect("Parse to AST");
+
+        let expected = [Expr::Conditional {
+            condition: Box::new(Expr::Literal(Literal::Bool(true))),
+            true_branch: Box::new(Expr::Block(vec![Expr::Assignment(
+                "foo",
+                Box::new(Expr::Literal(Literal::Number(10.0))),
+            )])),
+            else_branch: None,
+        }];
+
+        assert_eq!(ast, expected);
+    }
 
     #[test]
     fn variable_assignment() {
