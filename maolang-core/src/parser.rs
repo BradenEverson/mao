@@ -128,7 +128,7 @@ impl<'tok> Parser<'tok> {
     /// If the current rules require parenthesis, consume 'em
     pub fn consume_close_paren_if_necessary(&mut self) -> Result<(), ParseError> {
         if self.rules.parenthesis {
-            if let Ok(_) = self.consume(&TokenTag::CloseParen) {
+            if self.consume(&TokenTag::CloseParen).is_ok() {
                 Ok(())
             } else {
                 let Token {
@@ -138,7 +138,7 @@ impl<'tok> Parser<'tok> {
                     len,
                 } = self.peek_token();
                 Err(ParseError {
-                    message: format!("No closing parenthesis found for statement"),
+                    message: "No closing parenthesis found for statement".to_string(),
                     line,
                     col,
                     len,
@@ -152,7 +152,7 @@ impl<'tok> Parser<'tok> {
     /// If the current rules require parenthesis, consume 'em
     pub fn consume_open_paren_if_necessary(&mut self) -> Result<(), ParseError> {
         if self.rules.parenthesis {
-            if let Ok(_) = self.consume(&TokenTag::OpenParen) {
+            if self.consume(&TokenTag::OpenParen).is_ok() {
                 Ok(())
             } else {
                 let Token {
@@ -162,7 +162,7 @@ impl<'tok> Parser<'tok> {
                     len,
                 } = self.peek_token();
                 Err(ParseError {
-                    message: format!("No opening parenthesis found for statement"),
+                    message: "No opening parenthesis found for statement".to_string(),
                     line,
                     col,
                     len,
