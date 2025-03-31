@@ -139,7 +139,7 @@ where
                     TokenTag::Keyword(kwrd)
                 }
                 Err(Some(was)) => {
-                    let word = &self.as_ref()[col..=col + len];
+                    let word = &self.as_ref()[idx..idx + len];
                     return Err(TokenizeError::new(
                         format!("Invalid keyword `{word}`, did you mean `{was}`?"),
                         line,
