@@ -81,14 +81,14 @@ const AND_VARIANTS: &[&str] = &["and", "&&", r#"/\"#, "alongside"];
 const OR_VARIANTS: &[&str] = &["or", "||", r#"\/"#];
 
 /// All valid `false` variants
-const FALSE_VARIANTS: &[&str] = &["false", "False", "FALSE", "incorrect", "nah", ":("];
+const FALSE_VARIANTS: &[&str] = &["false", "incorrect", "nah", ":("];
 /// All valid `true` variants
-const TRUE_VARIANTS: &[&str] = &["true", "True", "TRUE", "correct", "yah", ":)"];
+const TRUE_VARIANTS: &[&str] = &["true", "correct", "yah", ":)"];
 
 /// All valid `for` variants
 const FOR_VARIANTS: &[&str] = &["for", "each"];
 /// All valid `if` variants
-const IF_VARIANTS: &[&str] = &["if", "case", "check", "cond"];
+const IF_VARIANTS: &[&str] = &["if", "case", "check"];
 /// All valid `else` variants
 const ELSE_VARIANTS: &[&str] = &["else", "then", "otherwise"];
 /// All valid `nil` variants
