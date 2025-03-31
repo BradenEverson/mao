@@ -28,3 +28,5 @@ Console.WriteLine(msg);
 ```
 
 The interpretter chooses at random each time by generating a seed and creating lexer, parser and evaluation rules each time you attempt to run your program.
+
+These rules are chaotic, but consistent. Within a single attempt to run a program, variable assignment will always be `var` and printing will always be `print`, and as long as that file remains the exact same (Sha256 that ignores whitespace) those rules will remain. This means a valid `mao` program will always be valid, it's just excruciatingly difficult without brute force to find a valid program to begin.
