@@ -24,7 +24,7 @@ Or maybe even
 
 ```
 new msg equals "Hey :D";
-Console.WriteLine(msg);
+Console.WriteLine msg done
 ```
 
 The interpretter chooses at random each time by generating a seed and creating lexer, parser and evaluation rules each time you attempt to run your program.
