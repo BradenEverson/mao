@@ -1,7 +1,5 @@
 //! Main Mao CLI runtime >:)
 
-//! Main interpretter runtime for Kronk programs
-
 use std::{env, fs::File, io::Read, process};
 
 use maolang_core::{
@@ -48,7 +46,7 @@ fn print_version() {
     println!("Mao Interpreter {}", VERSION);
 }
 
-/// Runs a file for KRONK interpretation
+/// Runs a file for Mao interpretation
 fn run_file(file_path: &str) {
     let mut file = match File::open(file_path) {
         Ok(file) => file,
@@ -122,7 +120,7 @@ fn run_file(file_path: &str) {
     let mut interp = Interpretter::default();
     for node in ast {
         if let Err(err) = interp.eval(node) {
-            eprintln!("Runtime error: {}", err);
+            eprintln!("Runtime error occurred: {}", err);
             process::exit(1);
         }
     }
