@@ -9,6 +9,13 @@ use super::Parser;
 /// A node in the abstract syntax tree, represents all possible operations that can occur
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr<'src> {
+    /// A while loop
+    WhileLoop {
+        /// The condition checked before running
+        condition: Box<Expr<'src>>,
+        /// What runs each time around
+        eval: Box<Expr<'src>>,
+    },
     /// A conditional executor
     Conditional {
         /// The condition being checked
@@ -152,12 +159,24 @@ impl<'src> Parser<'src> {
             }
             TokenTag::Keyword(Keyword::OpenBrace) => self.block(),
             TokenTag::Keyword(Keyword::ConditionalCheck) => self.if_statement(),
+            TokenTag::Keyword(Keyword::WhileLoopInit) => self.while_loop(),
             _ => {
                 let res = self.expression()?;
                 self.consume_end()?;
                 Ok(res)
             }
         }
+    }
+
+    /// A while loop is `while` (expression) block
+    fn while_loop(&mut self) -> Result<Expr<'src>, ParseError> {
+        self.consume(&TokenTag::Keyword(Keyword::WhileLoopInit))?;
+        self.consume_open_paren_if_necessary()?;
+        let condition = Box::new(self.expression()?);
+        self.consume_close_paren_if_necessary()?;
+        let eval = Box::new(self.block()?);
+
+        Ok(Expr::WhileLoop { condition, eval })
     }
 
     /// A block is `{ (expression)* }`
