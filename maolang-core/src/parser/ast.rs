@@ -17,6 +17,8 @@ pub enum Expr<'src> {
         cond: Box<Expr<'src>>,
         /// The update after each run
         inc: Box<Expr<'src>>,
+        /// What is run each time
+        exec: Box<Expr<'src>>,
     },
     /// A while loop
     WhileLoop {
@@ -180,7 +182,27 @@ impl<'src> Parser<'src> {
 
     /// A for loop is `for` (statment; expression; statement) block
     fn for_loop(&mut self) -> Result<Expr<'src>, ParseError> {
-        todo!()
+        self.consume(&TokenTag::Keyword(Keyword::ForLoopInit))?;
+        self.consume_open_paren_if_necessary()?;
+
+        let init = Box::new(self.statement()?);
+        self.consume_end()?;
+
+        let cond = Box::new(self.expression()?);
+        self.consume_end()?;
+
+        let inc = Box::new(self.statement()?);
+
+        self.consume_close_paren_if_necessary()?;
+
+        let exec = Box::new(self.block()?);
+
+        Ok(Expr::ForLoop {
+            init,
+            cond,
+            inc,
+            exec,
+        })
     }
 
     /// A while loop is `while` (expression) block

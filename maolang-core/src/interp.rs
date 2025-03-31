@@ -30,19 +30,25 @@ impl Error for RuntimeError {}
 
 impl<'a> Interpretter<'a> {
     /// Interprets an AST
-    pub fn eval(&mut self, ast: Expr<'a>) -> Result<Literal<'a>, RuntimeError> {
+    pub fn eval(&mut self, ast: &Expr<'a>) -> Result<Literal<'a>, RuntimeError> {
         match ast {
-            Expr::ForLoop { init, cond, inc } => {
-                self.eval(*init)?;
-                while self.eval(*cond.clone())?.bool()? {
-                    self.eval(*inc.clone())?;
+            Expr::ForLoop {
+                init,
+                cond,
+                inc,
+                exec,
+            } => {
+                self.eval(init)?;
+                while self.eval(cond)?.bool()? {
+                    self.eval(exec)?;
+                    self.eval(inc)?;
                 }
 
                 Ok(Literal::Null)
             }
             Expr::WhileLoop { condition, eval } => {
-                while self.eval(*condition.clone())?.bool()? {
-                    self.eval(*eval.clone())?;
+                while self.eval(condition)?.bool()? {
+                    self.eval(eval)?;
                 }
 
                 Ok(Literal::Null)
@@ -52,12 +58,12 @@ impl<'a> Interpretter<'a> {
                 true_branch,
                 else_branch,
             } => {
-                let condition = self.eval(*condition)?.bool()?;
+                let condition = self.eval(condition)?.bool()?;
 
                 if condition {
-                    self.eval(*true_branch)
+                    self.eval(true_branch)
                 } else if let Some(else_branch) = else_branch {
-                    self.eval(*else_branch)
+                    self.eval(else_branch)
                 } else {
                     Ok(Literal::Null)
                 }
@@ -69,20 +75,20 @@ impl<'a> Interpretter<'a> {
 
                 Ok(Literal::Null)
             }
-            Expr::Variable(var) => Ok(self.context[var]),
+            Expr::Variable(var) => Ok(self.context[*var]),
             Expr::Print(node) => {
-                println!("{}", self.eval(*node)?);
+                println!("{}", self.eval(node)?);
                 Ok(Literal::Null)
             }
             Expr::Assignment(name, val) => {
-                let val = self.eval(*val)?;
+                let val = self.eval(val)?;
                 self.context.insert(name.to_string(), val);
                 Ok(Literal::Null)
             }
-            Expr::Literal(l) => Ok(l),
-            Expr::Grouping(inner) => self.eval(*inner),
-            Expr::Binary { op, left, right } => op.eval(self.eval(*left)?, self.eval(*right)?),
-            Expr::Unary { op, node } => op.eval(self.eval(*node)?),
+            Expr::Literal(l) => Ok(*l),
+            Expr::Grouping(inner) => self.eval(inner),
+            Expr::Binary { op, left, right } => op.eval(self.eval(left)?, self.eval(right)?),
+            Expr::Unary { op, node } => op.eval(self.eval(node)?),
         }
     }
 }

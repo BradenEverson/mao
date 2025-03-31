@@ -119,7 +119,7 @@ fn run_file(file_path: &str) {
 
     let mut interp = Interpretter::default();
     for node in ast {
-        if let Err(err) = interp.eval(node) {
+        if let Err(err) = interp.eval(&node) {
             eprintln!("Runtime error occurred: {}", err);
             process::exit(1);
         }
