@@ -23,7 +23,7 @@ end
 Or maybe even 
 
 ```
-new msg equals "Hey :D";
+new msg equals "Hey :D" done
 Console.WriteLine msg done
 ```
 
