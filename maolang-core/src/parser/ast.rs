@@ -450,6 +450,30 @@ mod tests {
     };
 
     #[test]
+    fn while_loop() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let stream = r#"
+during (true) {
+    fmt.Println ("yay") .
+}
+            "#
+        .tokenize(&mut rng)
+        .expect("Valid tokenization");
+        let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
+
+        let ast = parser.parse().expect("Parse to AST");
+
+        let expected = [Expr::WhileLoop {
+            condition: Box::new(Expr::Literal(Literal::Bool(true))),
+            eval: Box::new(Expr::Block(vec![Expr::Print(Box::new(Expr::Literal(
+                Literal::String("yay"),
+            )))])),
+        }];
+
+        assert_eq!(ast, expected);
+    }
+
+    #[test]
     fn if_statement() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let stream = r#"
