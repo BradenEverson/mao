@@ -116,6 +116,7 @@ const WHILE_VARIANTS: &[&str] = &["while", "during", "whilst"];
 /// All valid `var` variants
 const VARIABLE_DECLARATION_VARIANTS: &[&str] = &["var", "let", "auto", "$", "val", "new"];
 
+/// All valid `function` variants
 const FUNCTION_DECLARATION_VARIANTS: &[&str] = &["fn", "func", "def", "function"];
 
 impl Keyword {

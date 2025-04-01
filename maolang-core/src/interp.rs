@@ -78,7 +78,7 @@ impl<'a> Interpretter<'a> {
 
                 Ok(Literal::Null)
             }
-            Expr::Variable(var) => self.stack.get(*var).cloned(),
+            Expr::Variable(var) => self.stack.get(var).cloned(),
             Expr::Print(node) => {
                 println!("{}", self.eval(node)?);
                 Ok(Literal::Null)
@@ -130,7 +130,7 @@ impl UnaryOp {
     }
 }
 
-impl<'a> Literal<'a> {
+impl Literal<'_> {
     /// Gets a literal's type name
     pub fn type_of(&self) -> &'static str {
         match self {

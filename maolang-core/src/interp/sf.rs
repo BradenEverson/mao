@@ -8,29 +8,34 @@ use super::RuntimeError;
 
 /// A runtime's stack
 #[derive(Debug, Clone)]
-pub struct Stack<'a>(Vec<StackFrame<'a>>);
+pub struct Stack<'a> {
+    /// The stackframes
+    stack: Vec<StackFrame<'a>>,
+}
 
-impl<'a> Default for Stack<'a> {
+impl Default for Stack<'_> {
     fn default() -> Self {
-        Self(vec![StackFrame::default()])
+        Self {
+            stack: vec![StackFrame::default()],
+        }
     }
 }
 
 impl<'a> Stack<'a> {
     /// Pushes a new stack frame
     pub fn push(&mut self) {
-        self.0.push(StackFrame::default());
+        self.stack.push(StackFrame::default());
     }
 
     /// Pops the current stackframe
     pub fn pop(&mut self) {
-        self.0.pop();
+        self.stack.pop();
     }
 
     /// Attempts to get a variable from the current context
     pub fn get(&mut self, name: &str) -> Result<&mut Literal<'a>, RuntimeError> {
-        let len = self.0.len() - 1;
-        if let Some(val) = self.0[len].variables.get_mut(name) {
+        let len = self.stack.len() - 1;
+        if let Some(val) = self.stack[len].variables.get_mut(name) {
             Ok(val)
         } else {
             Err(RuntimeError(format!(
@@ -41,8 +46,8 @@ impl<'a> Stack<'a> {
 
     /// Attempts to set a variable in the current context
     pub fn set(&mut self, name: String, lit: Literal<'a>) {
-        let len = self.0.len() - 1;
-        self.0[len].variables.insert(name, lit);
+        let len = self.stack.len() - 1;
+        self.stack[len].variables.insert(name, lit);
     }
 }
 
