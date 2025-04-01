@@ -15,7 +15,7 @@ Or maybe it could be
 ```
 $val = "Hello!".
 
-cond (:) alonside not :( ):
+cond (:) alongside not :( ):
     puts(val).
 end
 ```
