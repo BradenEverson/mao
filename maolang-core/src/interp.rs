@@ -1,11 +1,12 @@
 //! Core interpetter
 
 use std::{
-    collections::HashMap,
     error::Error,
     fmt::Display,
     ops::{Add, Div, Mul, Sub},
 };
+
+use sf::Stack;
 
 use crate::parser::ast::{BinaryOp, Expr, Literal, UnaryOp};
 
@@ -15,16 +16,16 @@ pub mod sf;
 #[derive(Debug, Default, Clone)]
 pub struct Interpretter<'a> {
     /// Local variables
-    context: HashMap<String, Literal<'a>>,
+    stack: Stack<'a>,
 }
 
 /// An error during execution
-#[derive(Debug, Clone, Copy)]
-pub struct RuntimeError;
+#[derive(Debug, Clone)]
+pub struct RuntimeError(pub String);
 
 impl Display for RuntimeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Runtime Error")
+        write!(f, "{}", self.0)
     }
 }
 
@@ -77,14 +78,14 @@ impl<'a> Interpretter<'a> {
 
                 Ok(Literal::Null)
             }
-            Expr::Variable(var) => Ok(self.context[*var]),
+            Expr::Variable(var) => self.stack.get(*var).cloned(),
             Expr::Print(node) => {
                 println!("{}", self.eval(node)?);
                 Ok(Literal::Null)
             }
             Expr::Assignment(name, val) => {
                 let val = self.eval(val)?;
-                self.context.insert(name.to_string(), val);
+                self.stack.set(name.to_string(), val);
                 Ok(Literal::Null)
             }
             Expr::Literal(l) => Ok(*l),
@@ -129,6 +130,18 @@ impl UnaryOp {
     }
 }
 
+impl<'a> Literal<'a> {
+    /// Gets a literal's type name
+    pub fn type_of(&self) -> &'static str {
+        match self {
+            Self::Number(_) => "number",
+            Self::String(_) => "string",
+            Self::Bool(_) => "bool",
+            Self::Null => "null",
+        }
+    }
+}
+
 impl Add for Literal<'_> {
     type Output = Result<Self, RuntimeError>;
 
@@ -136,7 +149,11 @@ impl Add for Literal<'_> {
         match (self, rhs) {
             (Self::Number(n1), Self::Number(n2)) => Ok(Literal::Number(n1 + n2)),
 
-            _ => Err(RuntimeError),
+            _ => Err(RuntimeError(format!(
+                "Can't add literals of type {} and {} together",
+                self.type_of(),
+                rhs.type_of(),
+            ))),
         }
     }
 }
@@ -147,7 +164,11 @@ impl Sub for Literal<'_> {
         match (self, rhs) {
             (Self::Number(n1), Self::Number(n2)) => Ok(Self::Number(n1 - n2)),
 
-            _ => Err(RuntimeError),
+            _ => Err(RuntimeError(format!(
+                "Can't subtract literals of type {} and {} together",
+                self.type_of(),
+                rhs.type_of(),
+            ))),
         }
     }
 }
@@ -158,7 +179,11 @@ impl Mul for Literal<'_> {
         match (self, rhs) {
             (Self::Number(n1), Self::Number(n2)) => Ok(Self::Number(n1 * n2)),
 
-            _ => Err(RuntimeError),
+            _ => Err(RuntimeError(format!(
+                "Can't multiply literals of type {} and {} together",
+                self.type_of(),
+                rhs.type_of(),
+            ))),
         }
     }
 }
@@ -168,7 +193,11 @@ impl Div for Literal<'_> {
     fn div(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (Self::Number(n1), Self::Number(n2)) => Ok(Self::Number(n1 / n2)),
-            _ => Err(RuntimeError),
+            _ => Err(RuntimeError(format!(
+                "Can't divide literals of type {} and {} together",
+                self.type_of(),
+                rhs.type_of(),
+            ))),
         }
     }
 }
@@ -179,14 +208,14 @@ impl<'a> Literal<'a> {
     pub fn uint(&self) -> Result<usize, RuntimeError> {
         match self {
             Self::Number(n) if *n >= 0.0 && n.round() == *n => Ok(*n as usize),
-            _ => Err(RuntimeError),
+            _ => Err(RuntimeError(format!("{self} is not an unsigned integer"))),
         }
     }
     /// Returns the inner literal if it's numeric, asserting a runtime error if not
     pub fn number(&self) -> Result<f64, RuntimeError> {
         match self {
             Self::Number(n) => Ok(*n),
-            _ => Err(RuntimeError),
+            _ => Err(RuntimeError(format!("{self} is not a number"))),
         }
     }
 
@@ -196,7 +225,7 @@ impl<'a> Literal<'a> {
             Self::Bool(val) => Ok(*val),
             Self::Number(0.0) => Ok(false),
             Self::Number(_) => Ok(true),
-            _ => Err(RuntimeError),
+            _ => Err(RuntimeError(format!("{self} is not a boolean"))),
         }
     }
 

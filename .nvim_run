@@ -1,1 +1,1 @@
-cargo run -r -- samples/while.mao
+cargo run -r -- samples/adderr.mao

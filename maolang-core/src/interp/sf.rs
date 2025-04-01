@@ -4,6 +4,8 @@ use std::collections::HashMap;
 
 use crate::parser::ast::Literal;
 
+use super::RuntimeError;
+
 /// A runtime's stack
 #[derive(Debug, Clone)]
 pub struct Stack<'a>(Vec<StackFrame<'a>>);
@@ -26,9 +28,15 @@ impl<'a> Stack<'a> {
     }
 
     /// Attempts to get a variable from the current context
-    pub fn get(&mut self, name: &str) -> Option<&mut Literal<'a>> {
+    pub fn get(&mut self, name: &str) -> Result<&mut Literal<'a>, RuntimeError> {
         let len = self.0.len() - 1;
-        self.0[len].variables.get_mut(name)
+        if let Some(val) = self.0[len].variables.get_mut(name) {
+            Ok(val)
+        } else {
+            Err(RuntimeError(format!(
+                "Variable with name {name} does not exist in this scope"
+            )))
+        }
     }
 
     /// Attempts to set a variable in the current context
