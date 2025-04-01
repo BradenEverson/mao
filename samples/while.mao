@@ -1,3 +1,3 @@
-whilst ( :) ) {
-    console.log ("looping is looping") .
+during ( :) ) {
+    Console.WriteLine ("this is a loop") .
 }

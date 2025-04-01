@@ -1,3 +1,3 @@
-var message is "this language makes me very sad" done
+let message = "this language is terrible".
 
-echo (message) done
+puts message.
