@@ -1,6 +1,6 @@
 [package]
 name = "maolang"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "A language with dynamic and annoying rules"
 license = "MIT OR Apache-2.0"

@@ -12,7 +12,7 @@ use rand_chacha::ChaCha8Rng;
 use sha2::{Digest, Sha256};
 
 /// The current version
-const VERSION: &str = "0.1.0";
+const VERSION: &str = "0.1.1";
 
 fn main() {
     let args: Vec<String> = env::args().collect();
