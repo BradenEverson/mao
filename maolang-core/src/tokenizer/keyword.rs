@@ -51,6 +51,9 @@ pub enum Keyword {
     Less,
     /// <=
     LessEqual,
+
+    /// Function declaration
+    FuncDec,
 }
 
 /// All valid assignment variants
@@ -113,6 +116,8 @@ const WHILE_VARIANTS: &[&str] = &["while", "during", "whilst"];
 /// All valid `var` variants
 const VARIABLE_DECLARATION_VARIANTS: &[&str] = &["var", "let", "auto", "$", "val", "new"];
 
+const FUNCTION_DECLARATION_VARIANTS: &[&str] = &["fn", "func", "def", "function"];
+
 impl Keyword {
     /// Gets all bindings to keyword variants
     pub fn all() -> Vec<(Keyword, &'static [&'static str])> {
@@ -138,6 +143,7 @@ impl Keyword {
             (Self::Bang, BANG_VARIANTS),
             (Self::Less, LESS_VARIANTS),
             (Self::LessEqual, LESSEQUAL_VARIANTS),
+            (Self::FuncDec, FUNCTION_DECLARATION_VARIANTS),
         ]
     }
 }
@@ -248,7 +254,7 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let keywords = KeywordRandomizer::seeded_start(&mut rng);
 
-        let attempt = keywords.try_from_str("fmt.Println");
+        let attempt = keywords.try_from_str("println");
 
         assert_eq!(attempt.unwrap(), Keyword::Print)
     }

@@ -446,32 +446,34 @@ impl<'src> Parser<'src> {
 }
 
 /** GOOD TO KNOW
- * These are the mappings for when the seed is 42:
- *
- * Lexer:
- *
- *     "NULL": EmptyValue
- *     "true": True
- *     "then": ConditionalElse
- *     "case": ConditionalCheck
- *     "$": VariableDeclaration
- *     "not": Bang
- *     "and": And
- *     "\\/": Or
- *     "inequal": BangEqual
- *     "<": Less
- *     "{": OpenBrace
- *     "}": CloseBrace
- *     "fmt.Println": Print
- *     "each": ForLoopInit
- *     ">": Greater
- *     "gte": GreaterEqual
- *     ":(": False
- *     "=": Equal
- *     "equals": EqualEqual
- *     "lte": LessEqual
- *     "during": WhileLoopInit
- */
+* These are the mappings for when the seed is 42:
+*
+* Lexer:
+*
+*   "undefined" EmptyValue,
+*   "not" Bang,
+*   "each" ForLoopInit,
+*   "and" And,
+*   "lte" LessEqual,
+*   "(": False,
+*   "true" True,
+*   "while" WhileLoopInit,
+*   "println" Print,
+*   "$" VariableDeclaration,
+*   "<" Less,
+*   "equals" EqualEqual,
+*   "inequal" BangEqual,
+*   "\\/" Or,
+*   "case" ConditionalCheck,
+*   "end" CloseBrace,
+*   "gte" GreaterEqual,
+*   "then" ConditionalElse,
+*   "def" FuncDec,
+*   "=" Equal,
+*   "{" OpenBrace,
+*   ">" Greater
+*
+*/
 
 #[cfg(test)]
 mod tests {
@@ -490,9 +492,9 @@ mod tests {
     fn while_loop() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let stream = r#"
-during (true) {
-    fmt.Println ("yay") .
-}
+while true {
+    println "yay" ;
+end
             "#
         .tokenize(&mut rng)
         .expect("Valid tokenization");
@@ -514,9 +516,9 @@ during (true) {
     fn if_statement() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let stream = r#"
-case (true) {
-    $ foo = 10 .
-}
+case true {
+    $ foo = 10 ;
+end
             "#
         .tokenize(&mut rng)
         .expect("Valid tokenization");
@@ -539,7 +541,7 @@ case (true) {
     #[test]
     fn variable_assignment() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let stream = "$ i = 0 .".tokenize(&mut rng).expect("Valid tokenization");
+        let stream = "$ i = 0 ;".tokenize(&mut rng).expect("Valid tokenization");
         let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
 
         let ast = &parser.parse().expect("Parse to AST")[0];
@@ -553,7 +555,7 @@ case (true) {
     #[test]
     fn print_statement() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let stream = "fmt.Println(42) ."
+        let stream = "println 42 ;"
             .tokenize(&mut rng)
             .expect("Valid tokenization");
         let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
@@ -569,7 +571,7 @@ case (true) {
     #[test]
     fn binary_operations() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let stream = "1 + 2 * 3 ."
+        let stream = "1 + 2 * 3 ;"
             .tokenize(&mut rng)
             .expect("Valid tokenization");
         let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
@@ -593,7 +595,7 @@ case (true) {
     #[test]
     fn comparison_operations() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let stream = "1 < 2 .".tokenize(&mut rng).expect("Valid tokenization");
+        let stream = "1 < 2 ;".tokenize(&mut rng).expect("Valid tokenization");
         let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
 
         let ast = &parser.parse().expect("Parse to AST")[0];
@@ -611,7 +613,7 @@ case (true) {
     #[test]
     fn equality_operations() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let stream = "1 equals 1 ."
+        let stream = "1 equals 1 ;"
             .tokenize(&mut rng)
             .expect("Valid tokenization");
         let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
@@ -631,7 +633,7 @@ case (true) {
     #[test]
     fn unary_operations() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let stream = "not true .".tokenize(&mut rng).expect("Valid tokenization");
+        let stream = "not true ;".tokenize(&mut rng).expect("Valid tokenization");
         let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
 
         let ast = &parser.parse().expect("Parse to AST")[0];
@@ -648,7 +650,7 @@ case (true) {
     #[test]
     fn grouping() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let stream = "(1 + 2) * 3 ."
+        let stream = "(1 + 2) * 3 ;"
             .tokenize(&mut rng)
             .expect("Valid tokenization");
         let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
@@ -670,7 +672,7 @@ case (true) {
     #[test]
     fn variable_reference() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let stream = "x .".tokenize(&mut rng).expect("Valid tokenization");
+        let stream = "x ;".tokenize(&mut rng).expect("Valid tokenization");
         let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);
 
         let ast = &parser.parse().expect("Parse to AST")[0];
@@ -681,7 +683,7 @@ case (true) {
     #[test]
     fn complex_expression() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let stream = "$ x = 5 * (3 + 2) . fmt.Println(x < 10) ."
+        let stream = "$ x = 5 * (3 + 2) ; println x < 10 ;"
             .tokenize(&mut rng)
             .expect("Valid tokenization");
         let mut parser = Parser::from_rng(&mut rng).with_tokens(&stream);

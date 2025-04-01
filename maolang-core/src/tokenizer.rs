@@ -323,7 +323,7 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let stream = r#"$ i = 0;
 $ foo = 10;
-fmt.Println("this is a little test");"#
+println ("this is a little test");"#
             .tokenize(&mut rng)
             .expect("Valid tokenization");
 
